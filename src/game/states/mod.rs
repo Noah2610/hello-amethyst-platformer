@@ -14,7 +14,9 @@ mod state_prelude {
     pub use amethyst::input::{is_close_requested, is_key_down};
     pub use amethyst::prelude::*;
     pub use amethyst::renderer::{
+        Camera,
         PngFormat,
+        Projection,
         SpriteRender,
         SpriteSheet,
         SpriteSheetFormat,

@@ -1,4 +1,5 @@
 mod player;
+mod scale;
 mod size;
 mod velocity;
 
@@ -6,6 +7,7 @@ pub mod prelude {
     pub use amethyst::core::transform::Transform;
 
     pub use super::Player;
+    pub use super::Scale;
     pub use super::Size;
     pub use super::Velocity;
 }
@@ -27,5 +29,6 @@ mod component_prelude {
 }
 
 pub use player::Player;
+pub use scale::Scale;
 pub use size::Size;
 pub use velocity::Velocity;

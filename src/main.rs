@@ -7,9 +7,6 @@ mod resource_helpers;
 mod components;
 mod systems;
 
-use custom_game_data::prelude::*;
-pub use resource_helpers::*;
-
 use amethyst::core::transform::TransformBundle;
 use amethyst::input::InputBundle;
 use amethyst::prelude::*;
@@ -22,6 +19,11 @@ use amethyst::renderer::{
 };
 use amethyst::ui::{DrawUi, UiBundle};
 use amethyst::{LogLevelFilter, LoggerConfig};
+
+pub use resource_helpers::*;
+
+use custom_game_data::prelude::*;
+use systems::prelude::*;
 
 fn main() -> amethyst::Result<()> {
     start_logger();
@@ -64,10 +66,13 @@ fn build_game_data<'a, 'b>() -> amethyst::Result<CustomGameDataBuilder<'a, 'b>>
     let ui_bundle = UiBundle::<String, String>::new();
 
     // Create GameDataBuilder
-    Ok(CustomGameDataBuilder::default()
+    let game_data = CustomGameDataBuilder::default()
         .with_display_config(display_config)
         .with_base_bundle(render_bundle)?
         .with_base_bundle(transform_bundle)?
         .with_base_bundle(input_bundle)?
-        .with_base_bundle(ui_bundle)?)
+        .with_base_bundle(ui_bundle)?
+        .with_core(ScaleSpritesSystem, "scale_sprites_system", &[])
+        .with_ingame(MoveEntitiesSystem, "move_entities_system", &[]);
+    Ok(game_data)
 }

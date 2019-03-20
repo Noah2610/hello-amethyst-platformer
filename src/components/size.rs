@@ -1,5 +1,6 @@
 use super::component_prelude::*;
 
+#[derive(Debug)]
 pub struct Size {
     pub w: f32,
     pub h: f32,
@@ -13,4 +14,10 @@ impl Size {
 
 impl Component for Size {
     type Storage = VecStorage<Self>;
+}
+
+impl From<(f32, f32)> for Size {
+    fn from(data: (f32, f32)) -> Self {
+        Self::new(data.0, data.1)
+    }
 }

@@ -78,6 +78,19 @@ impl<'a, 'b> CustomGameDataBuilder<'a, 'b> {
         self
     }
 
+    pub fn with_core<S>(
+        mut self,
+        system: S,
+        name: &str,
+        dependencies: &[&str],
+    ) -> Self
+    where
+        for<'c> S: System<'c> + Send + 'a, // NOTE: What the heck is this syntax??? `for<'a>` in a where clause???
+    {
+        self.core.add(system, name, dependencies);
+        self
+    }
+
     pub fn with_display_config(mut self, config: DisplayConfig) -> Self {
         self.display_config = Some(config);
         self

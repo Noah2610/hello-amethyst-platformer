@@ -10,9 +10,29 @@ impl Ingame {
         world.register::<Player>();
         world.register::<Size>();
         world.register::<Velocity>();
+        world.register::<Scale>();
+    }
+
+    fn initialize_camera(&self, world: &mut World) {
+        use constants::VIEW_DIMENSIONS;
+        let mut transform = Transform::default();
+        transform.set_z(1.0);
+        world
+            .create_entity()
+            .with(Camera::from(Projection::orthographic(
+                0.0,               // Left
+                VIEW_DIMENSIONS.0, // Right
+                0.0,               // Bottom (!)
+                VIEW_DIMENSIONS.1, // Top    (!)
+            )))
+            .with(transform)
+            .build();
     }
 
     fn initialize_player(&self, data: &mut StateData<CustomGameData>) {
+        let mut transform = Transform::default();
+        transform.set_xyz(0.0, 0.0, 0.0);
+
         let sprite_render = {
             let spritesheet_handle =
                 data.world.read_resource::<SpriteSheetHandle>();
@@ -25,7 +45,11 @@ impl Ingame {
         data.world
             .create_entity()
             .with(Player)
+            .with(transform)
             .with(sprite_render)
+            .with(Velocity::new(4.0, 0.0))
+            .with(Size::from(constants::PLAYER_SIZE))
+            .with(Scale)
             .build();
     }
 }
@@ -34,6 +58,7 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Ingame {
     fn on_start(&mut self, mut data: StateData<CustomGameData>) {
         self.register_components(&mut data.world);
 
+        self.initialize_camera(&mut data.world);
         self.initialize_player(&mut data);
     }
 
