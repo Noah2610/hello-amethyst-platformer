@@ -12,6 +12,7 @@ pub mod constants {
     pub const PLAYER_SIZE: (f32, f32) = (16.0, 32.0);
     pub const PLAYER_SPEED: (f32, f32) = (200.0, 250.0);
     pub const PLAYER_MAX_VELOCITY: (f32, f32) = (200.0, 1000.0);
+    pub const PLAYER_DECR_VELOCITY: (f32, f32) = (200.0, 0.0);
 }
 
 pub use states::prelude::*;

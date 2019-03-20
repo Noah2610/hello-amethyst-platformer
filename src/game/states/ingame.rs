@@ -47,10 +47,9 @@ impl Ingame {
             .with(Player::with_speed(constants::PLAYER_SPEED))
             .with(transform)
             .with(sprite_render)
-            .with(
-                Velocity::default()
-                    .with_max_velocity(constants::PLAYER_MAX_VELOCITY),
-            )
+            .with(Velocity::default())
+            .with(MaxVelocity::from(constants::PLAYER_MAX_VELOCITY))
+            .with(DecreaseVelocity::from(constants::PLAYER_DECR_VELOCITY))
             .with(Size::from(constants::PLAYER_SIZE))
             .with(Scale)
             .build();

@@ -74,8 +74,21 @@ fn build_game_data<'a, 'b>() -> amethyst::Result<CustomGameDataBuilder<'a, 'b>>
         .with_base_bundle(ui_bundle)?
         .with_core(ScaleSpritesSystem, "scale_sprites_system", &[])
         .with_ingame(ControlPlayerSystem, "control_player_system", &[])
+        .with_ingame(LimitVelocitiesSystem, "limit_velocities_system", &[
+            "control_player_system",
+        ])
         .with_ingame(MoveEntitiesSystem, "move_entities_system", &[
             "control_player_system",
-        ]);
+            "limit_velocities_system",
+        ])
+        .with_ingame(
+            DecreaseVelocitiesSystem,
+            "decrease_velocities_system",
+            &[
+                "control_player_system",
+                "limit_velocities_system",
+                "move_entities_system",
+            ],
+        );
     Ok(game_data)
 }

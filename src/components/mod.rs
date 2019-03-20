@@ -1,3 +1,5 @@
+mod decrease_velocity;
+mod max_velocity;
 mod player;
 mod scale;
 mod size;
@@ -6,6 +8,8 @@ mod velocity;
 pub mod prelude {
     pub use amethyst::core::transform::Transform;
 
+    pub use super::DecreaseVelocity;
+    pub use super::MaxVelocity;
     pub use super::Player;
     pub use super::Scale;
     pub use super::Size;
@@ -30,6 +34,8 @@ mod component_prelude {
     pub use super::Axis;
 }
 
+pub use decrease_velocity::DecreaseVelocity;
+pub use max_velocity::MaxVelocity;
 pub use player::Player;
 pub use scale::Scale;
 pub use size::Size;

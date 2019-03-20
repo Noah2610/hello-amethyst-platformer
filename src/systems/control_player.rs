@@ -19,8 +19,7 @@ impl<'a> System<'a> for ControlPlayerSystem {
             // Move left/right, on X axis
             if let Some(x) = input.axis_value("player_x") {
                 if x != 0.0 {
-                    let step = (player.speed.0 * dt) * (x as f32).signum();
-                    velocity.incr_x(step);
+                    velocity.x += (player.speed.0 * dt) * (x as f32).signum();
                 }
             }
         }

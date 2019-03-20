@@ -1,9 +1,13 @@
 mod control_player;
+mod decrease_velocities;
+mod limit_velocities;
 mod move_entities;
 mod scale_sprites;
 
 pub mod prelude {
     pub use super::ControlPlayerSystem;
+    pub use super::DecreaseVelocitiesSystem;
+    pub use super::LimitVelocitiesSystem;
     pub use super::MoveEntitiesSystem;
     pub use super::ScaleSpritesSystem;
 }
@@ -32,5 +36,7 @@ mod system_prelude {
 }
 
 pub use control_player::ControlPlayerSystem;
+pub use decrease_velocities::DecreaseVelocitiesSystem;
+pub use limit_velocities::LimitVelocitiesSystem;
 pub use move_entities::MoveEntitiesSystem;
 pub use scale_sprites::ScaleSpritesSystem;
