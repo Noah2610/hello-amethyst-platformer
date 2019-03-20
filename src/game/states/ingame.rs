@@ -44,10 +44,13 @@ impl Ingame {
 
         data.world
             .create_entity()
-            .with(Player)
+            .with(Player::with_speed(constants::PLAYER_SPEED))
             .with(transform)
             .with(sprite_render)
-            .with(Velocity::new(4.0, 0.0))
+            .with(
+                Velocity::default()
+                    .with_max_velocity(constants::PLAYER_MAX_VELOCITY),
+            )
             .with(Size::from(constants::PLAYER_SIZE))
             .with(Scale)
             .build();

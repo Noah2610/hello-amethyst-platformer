@@ -20,7 +20,6 @@ impl<'s> System<'s> for ScaleSpritesSystem {
         for (entity, size, scale_component, transform, sprite_render) in
             (&*entities, &sizes, &scales, &mut transforms, &sprites).join()
         {
-            println!("TRY SCALE");
             let spritesheet_handle = &sprite_render.sprite_sheet;
             let sprite_id = sprite_render.sprite_number;
             if let Some(spritesheet) = spritesheet.get(spritesheet_handle) {

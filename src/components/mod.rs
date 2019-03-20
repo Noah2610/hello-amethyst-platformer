@@ -26,9 +26,16 @@ mod component_prelude {
         Storage,
         VecStorage,
     };
+
+    pub use super::Axis;
 }
 
 pub use player::Player;
 pub use scale::Scale;
 pub use size::Size;
 pub use velocity::Velocity;
+
+pub enum Axis {
+    X,
+    Y,
+}

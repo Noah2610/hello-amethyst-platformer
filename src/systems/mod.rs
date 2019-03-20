@@ -20,6 +20,7 @@ mod system_prelude {
         Write,
         WriteStorage,
     };
+    pub use amethyst::input::InputHandler;
     pub use amethyst::renderer::{
         SpriteRender,
         SpriteSheet,
@@ -27,6 +28,7 @@ mod system_prelude {
     };
 
     pub use crate::components::prelude::*;
+    pub use crate::game::constants;
 }
 
 pub use control_player::ControlPlayerSystem;
