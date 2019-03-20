@@ -16,19 +16,21 @@ impl<'a> System<'a> for DecreaseVelocitiesSystem {
         let dt = time.delta_seconds();
 
         for (decr, velocity) in (&decr_velocities, &mut velocities).join() {
-            if decr.should_decrease {
-                let signx = velocity.x.signum();
-                let signy = velocity.y.signum();
+            let signx = velocity.x.signum();
+            let signy = velocity.y.signum();
 
-                // X
+            // X
+            if decr.should_decrease_x {
                 if velocity.x != 0.0 {
                     velocity.x -= (decr.x * dt) * signx;
                 }
                 if velocity.x.signum() != signx {
                     velocity.x = 0.0;
                 }
+            }
 
-                // Y
+            // Y
+            if decr.should_decrease_y {
                 if velocity.y != 0.0 {
                     velocity.y -= (decr.y * dt) * signy;
                 }
