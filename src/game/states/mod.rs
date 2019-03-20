@@ -15,6 +15,7 @@ mod state_prelude {
     pub use amethyst::prelude::*;
     pub use amethyst::renderer::{
         PngFormat,
+        SpriteRender,
         SpriteSheet,
         SpriteSheetFormat,
         SpriteSheetHandle,
