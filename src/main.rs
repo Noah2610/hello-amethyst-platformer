@@ -28,7 +28,7 @@ fn main() -> amethyst::Result<()> {
 
     let game_data = build_game_data()?;
 
-    let mut game = Application::new("./", game::Startup, game_data)?;
+    let mut game = Application::new("./", game::Startup::new(), game_data)?;
     game.run();
 
     Ok(())
@@ -55,8 +55,9 @@ fn build_game_data<'a, 'b>() -> amethyst::Result<CustomGameDataBuilder<'a, 'b>>
     );
 
     // Bundles
-    let render_bundle = RenderBundle::new(pipeline, Some(display_config))
-        .with_sprite_sheet_processor();
+    let render_bundle =
+        RenderBundle::new(pipeline, Some(display_config.clone()))
+            .with_sprite_sheet_processor();
     let transform_bundle = TransformBundle::new();
     let input_bundle = InputBundle::<String, String>::new()
         .with_bindings_from_file(&resource("config/bindings.ron"))?;
@@ -64,6 +65,7 @@ fn build_game_data<'a, 'b>() -> amethyst::Result<CustomGameDataBuilder<'a, 'b>>
 
     // Create GameDataBuilder
     Ok(CustomGameDataBuilder::default()
+        .with_display_config(display_config)
         .with_base_bundle(render_bundle)?
         .with_base_bundle(transform_bundle)?
         .with_base_bundle(input_bundle)?

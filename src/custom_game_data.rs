@@ -1,6 +1,7 @@
 use amethyst::core::{ArcThreadPool, SystemBundle};
 use amethyst::ecs::{Dispatcher, DispatcherBuilder, System};
 use amethyst::prelude::*;
+use amethyst::renderer::DisplayConfig;
 use amethyst::{DataInit, Error, Result};
 
 pub mod prelude {
@@ -17,8 +18,9 @@ pub enum GameState {
 }
 
 pub struct CustomGameData<'a, 'b> {
-    core_dispatcher:   Dispatcher<'a, 'b>,
-    ingame_dispatcher: Dispatcher<'a, 'b>,
+    core_dispatcher:    Dispatcher<'a, 'b>,
+    ingame_dispatcher:  Dispatcher<'a, 'b>,
+    pub display_config: DisplayConfig,
 }
 
 impl<'a, 'b> CustomGameData<'a, 'b> {
@@ -39,15 +41,17 @@ impl<'a, 'b> CustomGameData<'a, 'b> {
 }
 
 pub struct CustomGameDataBuilder<'a, 'b> {
-    pub core:   DispatcherBuilder<'a, 'b>,
-    pub ingame: DispatcherBuilder<'a, 'b>,
+    core:           DispatcherBuilder<'a, 'b>,
+    ingame:         DispatcherBuilder<'a, 'b>,
+    display_config: Option<DisplayConfig>,
 }
 
 impl<'a, 'b> CustomGameDataBuilder<'a, 'b> {
     pub fn new() -> Self {
         Self {
-            core:   DispatcherBuilder::new(),
-            ingame: DispatcherBuilder::new(),
+            core:           DispatcherBuilder::new(),
+            ingame:         DispatcherBuilder::new(),
+            display_config: None,
         }
     }
 
@@ -73,6 +77,11 @@ impl<'a, 'b> CustomGameDataBuilder<'a, 'b> {
         self.ingame.add(system, name, dependencies);
         self
     }
+
+    pub fn with_display_config(mut self, config: DisplayConfig) -> Self {
+        self.display_config = Some(config);
+        self
+    }
 }
 
 impl<'a, 'b> Default for CustomGameDataBuilder<'a, 'b> {
@@ -96,6 +105,10 @@ impl<'a, 'b> DataInit<CustomGameData<'a, 'b>>
         CustomGameData {
             core_dispatcher,
             ingame_dispatcher,
+            display_config: self.display_config.expect(
+                "DisplayConfig must be passed to CustomGameDataBuilder, use \
+                 `with_display_config`",
+            ),
         }
     }
 }

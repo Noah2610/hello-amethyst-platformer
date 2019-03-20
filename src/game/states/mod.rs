@@ -10,8 +10,9 @@ pub mod prelude {
 
 mod state_prelude {
     pub use amethyst::assets::{AssetStorage, Loader};
-    pub use amethyst::ecs::World;
+    pub use amethyst::ecs::{Entity, World};
     pub use amethyst::input::{is_close_requested, is_key_down};
+    pub use amethyst::prelude::*;
     pub use amethyst::renderer::{
         PngFormat,
         SpriteSheet,
@@ -21,6 +22,7 @@ mod state_prelude {
         TextureMetadata,
         VirtualKeyCode,
     };
+    pub use amethyst::ui::{Anchor, TtfFormat, UiText, UiTransform};
     pub use amethyst::{State, StateData, StateEvent, Trans};
 
     pub use super::super::constants;
