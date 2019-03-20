@@ -1,13 +1,18 @@
 use super::component_prelude::*;
 
 pub struct DecreaseVelocity {
-    pub x: f32,
-    pub y: f32,
+    pub x:               f32,
+    pub y:               f32,
+    pub should_decrease: bool,
 }
 
 impl DecreaseVelocity {
     pub fn new(x: f32, y: f32) -> Self {
-        Self { x, y }
+        Self {
+            x,
+            y,
+            should_decrease: true,
+        }
     }
 }
 

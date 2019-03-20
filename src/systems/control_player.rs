@@ -8,18 +8,24 @@ impl<'a> System<'a> for ControlPlayerSystem {
         Read<'a, InputHandler<String, String>>,
         WriteStorage<'a, Player>,
         WriteStorage<'a, Velocity>,
+        WriteStorage<'a, DecreaseVelocity>,
     );
 
     fn run(
         &mut self,
-        (time, input, mut players, mut velocities): Self::SystemData,
+        (time, input, mut players, mut velocities, mut decr_velocities): Self::SystemData,
     ) {
         let dt = time.delta_seconds();
-        for (player, velocity) in (&mut players, &mut velocities).join() {
+        for (player, velocity, decr_velocity) in
+            (&mut players, &mut velocities, &mut decr_velocities).join()
+        {
             // Move left/right, on X axis
             if let Some(x) = input.axis_value("player_x") {
                 if x != 0.0 {
                     velocity.x += (player.speed.0 * dt) * (x as f32).signum();
+                    decr_velocity.should_decrease = false;
+                } else {
+                    decr_velocity.should_decrease = true;
                 }
             }
         }
