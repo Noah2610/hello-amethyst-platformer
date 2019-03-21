@@ -17,8 +17,10 @@ pub mod prelude {
 mod system_prelude {
     pub use amethyst::assets::AssetStorage;
     pub use amethyst::core::timing::Time;
+    pub use amethyst::ecs::world::Index;
     pub use amethyst::ecs::{
         Entities,
+        Entity,
         Join,
         Read,
         ReadExpect,

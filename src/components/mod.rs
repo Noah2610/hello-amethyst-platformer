@@ -4,6 +4,7 @@ mod max_velocity;
 mod player;
 mod scale;
 mod size;
+mod solid;
 mod velocity;
 
 pub mod prelude {
@@ -15,6 +16,7 @@ pub mod prelude {
     pub use super::Player;
     pub use super::Scale;
     pub use super::Size;
+    pub use super::Solid;
     pub use super::Velocity;
 }
 
@@ -42,9 +44,29 @@ pub use max_velocity::MaxVelocity;
 pub use player::Player;
 pub use scale::Scale;
 pub use size::Size;
+pub use solid::Solid;
 pub use velocity::Velocity;
 
+#[derive(PartialEq)]
 pub enum Axis {
     X,
     Y,
+}
+
+impl Axis {
+    pub fn for_each<C>(mut iterate: C)
+    where
+        C: FnMut(Self),
+    {
+        iterate(Axis::X);
+        iterate(Axis::Y);
+    }
+
+    pub fn is_x(&self) -> bool {
+        Axis::X == *self
+    }
+
+    pub fn is_y(&self) -> bool {
+        Axis::Y == *self
+    }
 }

@@ -8,6 +8,7 @@ impl Ingame {
     /// Register components (can be removed once systems using the components are in place)
     fn register_components(&self, world: &mut World) {
         world.register::<Transparent>();
+        world.register::<Solid>();
     }
 
     fn initialize_camera(&self, world: &mut World) {
@@ -58,6 +59,37 @@ impl Ingame {
             .with(Size::from(settings.player_size))
             .with(Scale)
             .with(Gravity::from(settings.player_gravity))
+            .with(Solid)
+            .build();
+    }
+
+    fn initialize_platforms(&self, data: &mut StateData<CustomGameData>) {
+        let settings = data.world.settings();
+
+        let mut transform = Transform::default();
+        transform.set_xyz(
+            settings.view_size.0 * 0.5,
+            settings.view_size.1 * 0.5 - 200.0,
+            0.0,
+        );
+        let size = (200.0, 64.0);
+
+        let sprite_render = {
+            let spritesheet_handle =
+                data.world.read_resource::<SpriteSheetHandle>();
+            SpriteRender {
+                sprite_sheet:  spritesheet_handle.clone(),
+                sprite_number: 1,
+            }
+        };
+
+        data.world
+            .create_entity()
+            .with(transform)
+            .with(Size::from(size))
+            .with(Scale)
+            .with(Solid)
+            .with(sprite_render)
             .build();
     }
 }
@@ -67,6 +99,7 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Ingame {
         self.register_components(&mut data.world);
 
         self.initialize_camera(&mut data.world);
+        self.initialize_platforms(&mut data);
         self.initialize_player(&mut data);
     }
 

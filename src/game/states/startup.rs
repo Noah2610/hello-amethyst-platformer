@@ -73,7 +73,6 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Startup {
 
         // Settings RON
         let settings = load_settings();
-        dbg!(&settings);
         data.world.add_resource(settings);
     }
 
