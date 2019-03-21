@@ -8,15 +8,19 @@ impl<'a> System<'a> for LimitVelocitiesSystem {
 
     fn run(&mut self, (max_velocities, mut velocities): Self::SystemData) {
         for (max, velocity) in (&max_velocities, &mut velocities).join() {
-            if velocity.x.is_sign_positive() {
-                velocity.x = velocity.x.min(max.x)
-            } else if velocity.x.is_sign_negative() {
-                velocity.x = velocity.x.max(-max.x)
+            if let Some(max) = max.x {
+                if velocity.x > 0.0 {
+                    velocity.x = velocity.x.min(max)
+                } else if velocity.x < 0.0 {
+                    velocity.x = velocity.x.max(-max)
+                }
             }
-            if velocity.y.is_sign_positive() {
-                velocity.y = velocity.y.min(max.y)
-            } else if velocity.y.is_sign_negative() {
-                velocity.y = velocity.y.max(-max.y)
+            if let Some(max) = max.y {
+                if velocity.y > 0.0 {
+                    velocity.y = velocity.y.min(max)
+                } else if velocity.y < 0.0 {
+                    velocity.y = velocity.y.max(-max)
+                }
             }
         }
     }

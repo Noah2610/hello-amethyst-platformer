@@ -1,13 +1,28 @@
 use super::component_prelude::*;
 
 pub struct MaxVelocity {
-    pub x: f32,
-    pub y: f32,
+    pub x: Option<f32>,
+    pub y: Option<f32>,
 }
 
 impl MaxVelocity {
-    pub fn new(x: f32, y: f32) -> Self {
-        Self { x, y }
+    pub fn with_xy(x: f32, y: f32) -> Self {
+        Self {
+            x: Some(x),
+            y: Some(y),
+        }
+    }
+    pub fn with_x(x: f32) -> Self {
+        Self {
+            x: Some(x),
+            y: None,
+        }
+    }
+    pub fn with_y(y: f32) -> Self {
+        Self {
+            x: None,
+            y: Some(y),
+        }
     }
 }
 
@@ -17,6 +32,15 @@ impl Component for MaxVelocity {
 
 impl From<(f32, f32)> for MaxVelocity {
     fn from(data: (f32, f32)) -> Self {
-        Self::new(data.0, data.1)
+        Self::with_xy(data.0, data.1)
+    }
+}
+
+impl From<(Option<f32>, Option<f32>)> for MaxVelocity {
+    fn from(data: (Option<f32>, Option<f32>)) -> Self {
+        Self {
+            x: data.0,
+            y: data.1,
+        }
     }
 }

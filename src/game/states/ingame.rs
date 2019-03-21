@@ -69,7 +69,7 @@ impl Ingame {
         let mut transform = Transform::default();
         transform.set_xyz(
             settings.view_size.0 * 0.5,
-            settings.view_size.1 * 0.5 - 200.0,
+            settings.view_size.1 * 0.5 - 100.0,
             0.0,
         );
         let size = (200.0, 64.0);

@@ -2,8 +2,8 @@ Settings(
   view_size:            (600.0, 400.0),
   player_size:          (16.0,   32.0),
   player_speed:         (500.0,  0.0),
-  player_jump_strength: 200.0,
-  player_max_velocity:  (200.0, 1000.0),
+  player_jump_strength: 400.0,
+  player_max_velocity:  (Some(200.0), None),
   player_decr_velocity: (500.0, 1000.0),
-  player_gravity:       (0.0,   -250.0),
+  player_gravity:       (0.0,   -500.0),
 )
