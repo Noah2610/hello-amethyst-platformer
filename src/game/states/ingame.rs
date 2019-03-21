@@ -18,10 +18,10 @@ impl Ingame {
         world
             .create_entity()
             .with(Camera::from(Projection::orthographic(
-                0.0,                        // Left
-                settings.view_dimensions.0, // Right
-                0.0,                        // Bottom (!)
-                settings.view_dimensions.1, // Top    (!)
+                0.0,                  // Left
+                settings.view_size.0, // Right
+                0.0,                  // Bottom (!)
+                settings.view_size.1, // Top    (!)
             )))
             .with(transform)
             .build();
@@ -31,7 +31,11 @@ impl Ingame {
         let settings = data.world.settings();
 
         let mut transform = Transform::default();
-        transform.set_xyz(0.0, 0.0, 0.0);
+        transform.set_xyz(
+            settings.view_size.0 * 0.5,
+            settings.view_size.1 * 0.5,
+            0.0,
+        );
 
         let sprite_render = {
             let spritesheet_handle =
@@ -53,6 +57,7 @@ impl Ingame {
             .with(DecreaseVelocity::from(settings.player_decr_velocity))
             .with(Size::from(settings.player_size))
             .with(Scale)
+            .with(Gravity::from(settings.player_gravity))
             .build();
     }
 }

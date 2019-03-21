@@ -6,12 +6,13 @@ impl<'a> System<'a> for DecreaseVelocitiesSystem {
     type SystemData = (
         Read<'a, Time>,
         ReadStorage<'a, DecreaseVelocity>,
+        ReadStorage<'a, Gravity>,
         WriteStorage<'a, Velocity>,
     );
 
     fn run(
         &mut self,
-        (time, decr_velocities, mut velocities): Self::SystemData,
+        (time, decr_velocities, gravities, mut velocities): Self::SystemData,
     ) {
         let dt = time.delta_seconds();
 
