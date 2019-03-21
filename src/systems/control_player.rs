@@ -4,6 +4,7 @@ pub struct ControlPlayerSystem;
 
 impl<'a> System<'a> for ControlPlayerSystem {
     type SystemData = (
+        ReadExpect<'a, Settings>,
         Read<'a, Time>,
         Read<'a, InputHandler<String, String>>,
         WriteStorage<'a, Player>,
@@ -13,7 +14,14 @@ impl<'a> System<'a> for ControlPlayerSystem {
 
     fn run(
         &mut self,
-        (time, input, mut players, mut velocities, mut decr_velocities): Self::SystemData,
+        (
+            settings,
+            time,
+            input,
+            mut players,
+            mut velocities,
+            mut decr_velocities,
+        ): Self::SystemData,
     ) {
         let dt = time.delta_seconds();
         for (player, velocity, decr_velocity) in
@@ -32,7 +40,7 @@ impl<'a> System<'a> for ControlPlayerSystem {
             // Jump
             if let Some(is_action_down) = input.action_is_down("player_jump") {
                 if is_action_down && !player.is_jump_button_down {
-                    velocity.y += constants::PLAYER_JUMP_STRENGTH;
+                    velocity.y += settings.player_jump_strength;
                 }
                 player.is_jump_button_down = is_action_down;
             }

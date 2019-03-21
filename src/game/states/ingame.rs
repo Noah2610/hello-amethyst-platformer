@@ -7,29 +7,29 @@ pub struct Ingame;
 impl Ingame {
     /// Register components (can be removed once systems using the components are in place)
     fn register_components(&self, world: &mut World) {
-        world.register::<Player>();
-        world.register::<Size>();
-        world.register::<Velocity>();
-        world.register::<Scale>();
+        world.register::<Transparent>();
     }
 
     fn initialize_camera(&self, world: &mut World) {
-        use constants::VIEW_DIMENSIONS;
+        let settings = world.read_resource::<Settings>().clone();
+
         let mut transform = Transform::default();
         transform.set_z(1.0);
         world
             .create_entity()
             .with(Camera::from(Projection::orthographic(
-                0.0,               // Left
-                VIEW_DIMENSIONS.0, // Right
-                0.0,               // Bottom (!)
-                VIEW_DIMENSIONS.1, // Top    (!)
+                0.0,                        // Left
+                settings.view_dimensions.0, // Right
+                0.0,                        // Bottom (!)
+                settings.view_dimensions.1, // Top    (!)
             )))
             .with(transform)
             .build();
     }
 
     fn initialize_player(&self, data: &mut StateData<CustomGameData>) {
+        let settings = data.world.settings();
+
         let mut transform = Transform::default();
         transform.set_xyz(0.0, 0.0, 0.0);
 
@@ -44,13 +44,14 @@ impl Ingame {
 
         data.world
             .create_entity()
-            .with(Player::with_speed(constants::PLAYER_SPEED))
+            .with(Player::with_speed(settings.player_speed))
             .with(transform)
             .with(sprite_render)
+            .with(Transparent)
             .with(Velocity::default())
-            .with(MaxVelocity::from(constants::PLAYER_MAX_VELOCITY))
-            .with(DecreaseVelocity::from(constants::PLAYER_DECR_VELOCITY))
-            .with(Size::from(constants::PLAYER_SIZE))
+            .with(MaxVelocity::from(settings.player_max_velocity))
+            .with(DecreaseVelocity::from(settings.player_decr_velocity))
+            .with(Size::from(settings.player_size))
             .with(Scale)
             .build();
     }
@@ -66,13 +67,16 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Ingame {
 
     fn handle_event(
         &mut self,
-        _: StateData<CustomGameData>,
+        data: StateData<CustomGameData>,
         event: StateEvent,
     ) -> Trans<CustomGameData<'a, 'b>, StateEvent> {
         if let StateEvent::Window(event) = &event {
-            if is_close_requested(&event) || is_key_down(&event, keys::QUIT) {
+            let input = data.world.input();
+            if is_close_requested(&event)
+                || input.action_is_down("quit").unwrap_or(false)
+            {
                 Trans::Quit
-            } else if is_key_down(&event, keys::PAUSE) {
+            } else if input.action_is_down("pause").unwrap_or(false) {
                 Trans::Push(Box::new(Paused))
             } else {
                 Trans::None

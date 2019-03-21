@@ -11,7 +11,7 @@ pub mod prelude {
 mod state_prelude {
     pub use amethyst::assets::{AssetStorage, Loader};
     pub use amethyst::ecs::{Entity, World};
-    pub use amethyst::input::{is_close_requested, is_key_down};
+    pub use amethyst::input::is_close_requested;
     pub use amethyst::prelude::*;
     pub use amethyst::renderer::{
         Camera,
@@ -23,15 +23,16 @@ mod state_prelude {
         SpriteSheetHandle,
         Texture,
         TextureMetadata,
+        Transparent,
         VirtualKeyCode,
     };
     pub use amethyst::ui::{Anchor, TtfFormat, UiText, UiTransform};
     pub use amethyst::{State, StateData, StateEvent, Trans};
 
-    pub use super::super::constants;
-    pub use super::super::constants::keys;
     pub use crate::custom_game_data::prelude::*;
     pub use crate::resource_helpers::*;
+    pub use crate::settings::prelude::*;
+    pub use crate::world_helpers::*;
 }
 
 pub use ingame::Ingame;

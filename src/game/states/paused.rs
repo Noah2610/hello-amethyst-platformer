@@ -13,9 +13,12 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Paused {
         event: StateEvent,
     ) -> Trans<CustomGameData<'a, 'b>, StateEvent> {
         if let StateEvent::Window(event) = &event {
-            if is_close_requested(&event) || is_key_down(&event, keys::QUIT) {
+            let input = data.world.input();
+            if is_close_requested(&event)
+                || input.action_is_down("quit").unwrap_or(false)
+            {
                 Trans::Quit
-            } else if is_key_down(&event, keys::PAUSE) {
+            } else if input.action_is_down("pause").unwrap_or(false) {
                 // Remove paused UI
                 Trans::Pop
             } else {

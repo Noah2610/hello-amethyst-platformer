@@ -19,9 +19,11 @@ mod system_prelude {
         Entities,
         Join,
         Read,
+        ReadExpect,
         ReadStorage,
         System,
         Write,
+        WriteExpect,
         WriteStorage,
     };
     pub use amethyst::input::InputHandler;
@@ -32,7 +34,7 @@ mod system_prelude {
     };
 
     pub use crate::components::prelude::*;
-    pub use crate::game::constants;
+    pub use crate::settings::prelude::*;
 }
 
 pub use control_player::ControlPlayerSystem;

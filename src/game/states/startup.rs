@@ -1,6 +1,5 @@
 use super::super::Ingame;
 use super::state_prelude::*;
-use super::Paused;
 
 pub struct Startup {
     loading_entity: Option<Entity>,
@@ -13,7 +12,8 @@ impl Startup {
         }
     }
 
-    fn is_spritesheet_loaded(&self, data: &StateData<CustomGameData>) -> bool {
+    fn is_finished_loading(&self, data: &StateData<CustomGameData>) -> bool {
+        // Finished loading spritesheet?
         let spritesheet_asset =
             data.world.read_resource::<AssetStorage<SpriteSheet>>();
         let spritesheet_handle =
@@ -70,15 +70,22 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Startup {
         // Spritesheet
         let spritesheet_handle = load_spritesheet(&mut data.world);
         data.world.add_resource(spritesheet_handle);
+
+        // Settings RON
+        let settings = load_settings();
+        dbg!(&settings);
+        data.world.add_resource(settings);
     }
 
     fn handle_event(
         &mut self,
-        _: StateData<CustomGameData>,
+        data: StateData<CustomGameData>,
         event: StateEvent,
     ) -> Trans<CustomGameData<'a, 'b>, StateEvent> {
         if let StateEvent::Window(event) = &event {
-            if is_close_requested(&event) || is_key_down(&event, keys::QUIT) {
+            if is_close_requested(&event)
+                || data.world.input().action_is_down("quit").unwrap_or(false)
+            {
                 Trans::Quit
             } else {
                 Trans::None
@@ -94,7 +101,7 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Startup {
     ) -> Trans<CustomGameData<'a, 'b>, StateEvent> {
         data.data.update(&data.world, GameState::Startup);
 
-        if self.is_spritesheet_loaded(&data) {
+        if self.is_finished_loading(&data) {
             // Remove loading text
             if let Some(entity) = self.loading_entity {
                 data.world
@@ -129,6 +136,15 @@ fn load_spritesheet(world: &mut World) -> SpriteSheetHandle {
         (),
         &spritesheet_store,
     )
+}
+
+fn load_settings() -> Settings {
+    let settings_raw = read_file(resource("config/settings.ron"))
+        .expect("Couldn't read settings.ron file");
+    ron::Value::from_str(&settings_raw)
+        .unwrap()
+        .into_rust()
+        .unwrap()
 }
 
 /// `UiTransform::new` wrapper

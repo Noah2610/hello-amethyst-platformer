@@ -1,8 +1,13 @@
 extern crate amethyst;
+extern crate ron;
+#[macro_use]
+extern crate serde;
 
 mod custom_game_data;
 mod game;
 mod resource_helpers;
+mod settings;
+mod world_helpers;
 
 mod components;
 mod systems;
@@ -11,16 +16,18 @@ use amethyst::core::transform::TransformBundle;
 use amethyst::input::InputBundle;
 use amethyst::prelude::*;
 use amethyst::renderer::{
+    ColorMask,
     DisplayConfig,
     DrawFlat2D,
     Pipeline,
     RenderBundle,
     Stage,
+    ALPHA,
 };
 use amethyst::ui::{DrawUi, UiBundle};
 use amethyst::{LogLevelFilter, LoggerConfig};
 
-pub use resource_helpers::*;
+use resource_helpers::*;
 
 use custom_game_data::prelude::*;
 use systems::prelude::*;
@@ -52,7 +59,11 @@ fn build_game_data<'a, 'b>() -> amethyst::Result<CustomGameDataBuilder<'a, 'b>>
     let pipeline = Pipeline::build().with_stage(
         Stage::with_backbuffer()
             .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-            .with_pass(DrawFlat2D::new())
+            .with_pass(DrawFlat2D::new().with_transparency(
+                ColorMask::all(),
+                ALPHA,
+                None,
+            ))
             .with_pass(DrawUi::new()),
     );
 
