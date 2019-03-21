@@ -20,28 +20,32 @@ impl<'a> System<'a> for DecreaseVelocitiesSystem {
             let signy = velocity.y.signum();
 
             // X
-            if decr.should_decrease_x {
-                if velocity.x != 0.0 {
+            if velocity.x != 0.0 {
+                if (signx > 0.0 && decr.should_decrease_x_pos)
+                    || (signx < 0.0 && decr.should_decrease_x_neg)
+                {
                     velocity.x -= (decr.x * dt) * signx;
                 }
-                if velocity.x.signum() != signx {
-                    velocity.x = 0.0;
-                }
-            } else {
-                decr.should_decrease_x = true;
             }
+            if velocity.x.signum() != signx {
+                velocity.x = 0.0;
+            }
+            decr.should_decrease_x_pos = true;
+            decr.should_decrease_x_neg = true;
 
             // Y
-            if decr.should_decrease_y {
-                if velocity.y != 0.0 {
+            if velocity.y != 0.0 {
+                if (signy > 0.0 && decr.should_decrease_y_pos)
+                    || (signy < 0.0 && decr.should_decrease_y_neg)
+                {
                     velocity.y -= (decr.y * dt) * signy;
                 }
-                if velocity.y.signum() != signy {
-                    velocity.y = 0.0;
-                }
-            } else {
-                decr.should_decrease_y = true;
             }
+            if velocity.y.signum() != signy {
+                velocity.y = 0.0;
+            }
+            decr.should_decrease_y_pos = true;
+            decr.should_decrease_y_neg = true;
         }
     }
 }

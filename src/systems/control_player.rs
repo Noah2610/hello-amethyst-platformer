@@ -35,9 +35,13 @@ impl<'a> System<'a> for ControlPlayerSystem {
             if let Some(x) = input.axis_value("player_x") {
                 if x != 0.0 {
                     velocity.x += (player.speed.0 * dt) * (x as f32).signum();
-                    decr_velocity
-                        .as_mut()
-                        .map(|decr| decr.should_decrease_x = false);
+                    decr_velocity.as_mut().map(|decr| {
+                        if x > 0.0 {
+                            decr.should_decrease_x_pos = false
+                        } else if x < 0.0 {
+                            decr.should_decrease_x_neg = false
+                        }
+                    });
                 }
             }
 
