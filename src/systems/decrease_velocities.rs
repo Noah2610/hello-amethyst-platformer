@@ -5,18 +5,17 @@ pub struct DecreaseVelocitiesSystem;
 impl<'a> System<'a> for DecreaseVelocitiesSystem {
     type SystemData = (
         Read<'a, Time>,
-        ReadStorage<'a, DecreaseVelocity>,
-        ReadStorage<'a, Gravity>,
+        WriteStorage<'a, DecreaseVelocity>,
         WriteStorage<'a, Velocity>,
     );
 
     fn run(
         &mut self,
-        (time, decr_velocities, gravities, mut velocities): Self::SystemData,
+        (time, mut decr_velocities, mut velocities): Self::SystemData,
     ) {
         let dt = time.delta_seconds();
 
-        for (decr, velocity) in (&decr_velocities, &mut velocities).join() {
+        for (decr, velocity) in (&mut decr_velocities, &mut velocities).join() {
             let signx = velocity.x.signum();
             let signy = velocity.y.signum();
 
@@ -28,6 +27,8 @@ impl<'a> System<'a> for DecreaseVelocitiesSystem {
                 if velocity.x.signum() != signx {
                     velocity.x = 0.0;
                 }
+            } else {
+                decr.should_decrease_x = true;
             }
 
             // Y
@@ -38,6 +39,8 @@ impl<'a> System<'a> for DecreaseVelocitiesSystem {
                 if velocity.y.signum() != signy {
                     velocity.y = 0.0;
                 }
+            } else {
+                decr.should_decrease_y = true;
             }
         }
     }

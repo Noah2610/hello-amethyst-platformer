@@ -16,20 +16,20 @@ impl<'a> System<'a> for GravitySystem {
     ) {
         let dt = time.delta_seconds();
 
-        for (gravity, velocity, decr_velocity) in
-            (&gravities, &mut velocities, &mut decr_velocities).join()
+        for (gravity, velocity, mut decr_velocity) in
+            (&gravities, &mut velocities, (&mut decr_velocities).maybe()).join()
         {
             if gravity.x != 0.0 {
                 velocity.x += gravity.x * dt;
-                decr_velocity.should_decrease_x = false;
-            } else {
-                decr_velocity.should_decrease_x = true;
+                decr_velocity
+                    .as_mut()
+                    .map(|decr| decr.should_decrease_x = false);
             }
             if gravity.y != 0.0 {
                 velocity.y += gravity.y * dt;
-                decr_velocity.should_decrease_y = false;
-            } else {
-                decr_velocity.should_decrease_y = true;
+                decr_velocity
+                    .as_mut()
+                    .map(|decr| decr.should_decrease_y = false);
             }
         }
     }

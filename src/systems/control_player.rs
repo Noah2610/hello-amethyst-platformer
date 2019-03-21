@@ -24,16 +24,20 @@ impl<'a> System<'a> for ControlPlayerSystem {
         ): Self::SystemData,
     ) {
         let dt = time.delta_seconds();
-        for (player, velocity, decr_velocity) in
-            (&mut players, &mut velocities, &mut decr_velocities).join()
+        for (player, velocity, mut decr_velocity) in (
+            &mut players,
+            &mut velocities,
+            (&mut decr_velocities).maybe(),
+        )
+            .join()
         {
             // Move left/right, on X axis
             if let Some(x) = input.axis_value("player_x") {
                 if x != 0.0 {
                     velocity.x += (player.speed.0 * dt) * (x as f32).signum();
-                    decr_velocity.should_decrease_x = false;
-                } else {
-                    decr_velocity.should_decrease_x = true;
+                    decr_velocity
+                        .as_mut()
+                        .map(|decr| decr.should_decrease_x = false);
                 }
             }
 
