@@ -57,7 +57,7 @@ impl Ingame {
             .with(MaxVelocity::from(settings.player_max_velocity))
             .with(DecreaseVelocity::from(settings.player_decr_velocity))
             .with(Size::from(settings.player_size))
-            .with(Scale)
+            .with(ScaleOnce)
             .with(Gravity::from(settings.player_gravity))
             .with(Solid)
             .build();
@@ -87,7 +87,7 @@ impl Ingame {
             .create_entity()
             .with(transform)
             .with(Size::from(size))
-            .with(Scale)
+            .with(ScaleOnce)
             .with(Solid)
             .with(sprite_render)
             .build();

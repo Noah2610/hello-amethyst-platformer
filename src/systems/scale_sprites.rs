@@ -8,7 +8,7 @@ impl<'s> System<'s> for ScaleSpritesSystem {
         Read<'s, AssetStorage<SpriteSheet>>,
         ReadStorage<'s, Size>,
         ReadStorage<'s, SpriteRender>,
-        WriteStorage<'s, Scale>,
+        WriteStorage<'s, ScaleOnce>,
         WriteStorage<'s, Transform>,
     );
 

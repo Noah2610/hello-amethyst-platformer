@@ -1,4 +1,5 @@
 use super::component_prelude::*;
+use crate::geo::Vector;
 
 #[derive(Debug)]
 pub struct Size {

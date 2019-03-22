@@ -1,4 +1,7 @@
 use super::component_prelude::*;
+use crate::geo::Side;
+
+use amethyst::ecs::Entity;
 
 pub struct Player {
     pub speed:               (f32, f32),
@@ -11,6 +14,10 @@ impl Player {
             speed,
             is_jump_button_down: false,
         }
+    }
+
+    pub fn on_collide(&mut self, entity: &Entity, side: Side) {
+
     }
 }
 

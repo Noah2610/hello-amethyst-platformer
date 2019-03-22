@@ -5,6 +5,7 @@ extern crate serde;
 
 mod custom_game_data;
 mod game;
+mod geo;
 mod resource_helpers;
 mod settings;
 mod world_helpers;

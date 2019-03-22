@@ -1,12 +1,12 @@
 use super::component_prelude::*;
 
-pub struct Scale;
+pub struct ScaleOnce;
 
-impl Component for Scale {
+impl Component for ScaleOnce {
     type Storage = NullStorage<Self>;
 }
 
-impl Default for Scale {
+impl Default for ScaleOnce {
     fn default() -> Self {
         Self
     }
