@@ -57,7 +57,7 @@ impl<'a> MoveEntitiesSystem {
         transforms: &mut WriteStorage<'a, Transform>,
     ) {
         // Generate CollisionGrid with all solid entities
-        let collision_grid = CollisionGrid::from(
+        let collision_grid = CollisionGrid::<()>::from(
             (entities, &*transforms, sizes.maybe(), solids)
                 .join()
                 .map(|(entity, transform, size_opt, _)| {
@@ -91,7 +91,7 @@ impl<'a> MoveEntitiesSystem {
                             entity_id, transform, size_opt, &axis, sign,
                         );
                     // Check for collision in newly calculated position
-                    if collision_grid.collides_any(collision_rect) {
+                    if collision_grid.collides_any(&collision_rect) {
                         // New position would be in collision, break out of loop and don't apply
                         // new position
                         break;
@@ -108,7 +108,7 @@ impl<'a> MoveEntitiesSystem {
                         entity_id, transform, size_opt, &axis, rem,
                     );
                 // Check for collision in newly calculated position
-                if !collision_grid.collides_any(collision_rect) {
+                if !collision_grid.collides_any(&collision_rect) {
                     // New position would NOT be in collision, apply new position
                     transform.set_x(new_position.0);
                     transform.set_y(new_position.1);
@@ -118,13 +118,13 @@ impl<'a> MoveEntitiesSystem {
     }
 }
 
-fn new_collision_rect_and_position(
+fn new_collision_rect_and_position<T>(
     id: Index,
     transform: &Transform,
     size_opt: Option<&Size>,
     axis: &Axis,
     step: f32,
-) -> (CollisionRect, Vector) {
+) -> (CollisionRect<T>, Vector) {
     // Calculate new position
     let pos = transform.translation();
     let new_position = (

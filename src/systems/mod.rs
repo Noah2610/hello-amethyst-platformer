@@ -1,3 +1,4 @@
+mod collision;
 mod control_player;
 mod decrease_velocities;
 mod gravity;
@@ -6,6 +7,7 @@ mod move_entities;
 mod scale_sprites;
 
 pub mod prelude {
+    pub use super::CollisionSystem;
     pub use super::ControlPlayerSystem;
     pub use super::DecreaseVelocitiesSystem;
     pub use super::GravitySystem;
@@ -41,6 +43,7 @@ mod system_prelude {
     pub use crate::settings::prelude::*;
 }
 
+pub use collision::CollisionSystem;
 pub use control_player::ControlPlayerSystem;
 pub use decrease_velocities::DecreaseVelocitiesSystem;
 pub use gravity::GravitySystem;
