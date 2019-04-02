@@ -56,7 +56,7 @@ impl<'a> System<'a> for CollisionSystem {
         for (entity, collision) in (&entities, &mut collisions).join() {
             let colliding = collision_grid.colliding_with_id(entity.id());
             for other_rect in colliding {
-                collision.set_collision_with(other_rect.id, Side::Left);
+                collision.set_collision_with(other_rect.id);
             }
 
             collision.update();

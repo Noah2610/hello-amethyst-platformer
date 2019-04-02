@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use amethyst::ecs::world::Index;
 
 use super::component_prelude::*;
-use crate::geo::Side;
 
 pub enum State {
     Enter,
@@ -13,7 +12,6 @@ pub enum State {
 }
 
 pub struct Data {
-    pub side:                 Side,
     pub state:                State,
     set_collision_this_frame: bool,
 }
@@ -51,6 +49,10 @@ impl Collision {
         }
     }
 
+    pub fn in_collision(&self) -> bool {
+        !self.collisions.is_empty()
+    }
+
     pub fn collision_with(&self, entity_id: Index) -> Option<&Data> {
         self.collisions.get(&entity_id)
     }
@@ -67,7 +69,7 @@ impl Collision {
     }
 
     /// Is called when an entity is colliding with this entity
-    pub fn set_collision_with(&mut self, entity_id: Index, side: Side) {
+    pub fn set_collision_with(&mut self, entity_id: Index) {
         if let Some(data) = self.collisions.get_mut(&entity_id) {
             // Set state of colliding entity to ...
             data.state = match data.state {
@@ -79,8 +81,7 @@ impl Collision {
             data.set_collision_this_frame = true;
         } else {
             self.collisions.insert(entity_id, Data {
-                side,
-                state: State::Enter,
+                state:                    State::Enter,
                 set_collision_this_frame: true,
             });
         }

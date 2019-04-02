@@ -4,9 +4,11 @@ pub struct ControlPlayerSystem;
 
 impl<'a> System<'a> for ControlPlayerSystem {
     type SystemData = (
+        Entities<'a>,
         ReadExpect<'a, Settings>,
         Read<'a, Time>,
         Read<'a, InputHandler<String, String>>,
+        ReadStorage<'a, Collision>,
         WriteStorage<'a, Player>,
         WriteStorage<'a, Velocity>,
         WriteStorage<'a, DecreaseVelocity>,
@@ -15,19 +17,22 @@ impl<'a> System<'a> for ControlPlayerSystem {
     fn run(
         &mut self,
         (
+            entities,
             settings,
             time,
             input,
+            collisions,
             mut players,
             mut velocities,
             mut decr_velocities,
         ): Self::SystemData,
     ) {
         let dt = time.delta_seconds();
-        for (player, velocity, mut decr_velocity) in (
+        for (player, velocity, mut decr_velocity, collision) in (
             &mut players,
             &mut velocities,
             (&mut decr_velocities).maybe(),
+            &collisions,
         )
             .join()
         {
@@ -51,6 +56,15 @@ impl<'a> System<'a> for ControlPlayerSystem {
                     velocity.y += settings.player_jump_strength;
                 }
                 player.is_jump_button_down = is_action_down;
+            }
+
+            if collision.in_collision() {
+                for (entity, other_collision) in (&entities, &collisions).join()
+                {
+                    if collision.in_collision_with(entity.id()) {
+                        println!("PLAYER IS IN COLLISION!!!");
+                    }
+                }
             }
         }
     }

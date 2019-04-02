@@ -9,6 +9,7 @@ impl Ingame {
     fn register_components(&self, world: &mut World) {
         world.register::<Transparent>();
         world.register::<Solid>();
+        world.register::<Collision>();
     }
 
     fn initialize_camera(&self, world: &mut World) {
@@ -60,6 +61,7 @@ impl Ingame {
             .with(ScaleOnce)
             .with(Gravity::from(settings.player_gravity))
             .with(Solid)
+            .with(Collision::new())
             .build();
     }
 
@@ -90,6 +92,7 @@ impl Ingame {
             .with(ScaleOnce)
             .with(Solid)
             .with(sprite_render)
+            .with(Collision::new())
             .build();
     }
 }

@@ -1,3 +1,3 @@
 nmap <leader>r :!cargo +nightly run --features amethyst/nightly<CR>
-nmap <leader>R :!cargo run --release<CR>
+nmap <leader>R :!RUST_BACKTRACE=1 cargo +nightly run --features amethyst/nightly 2>&1 \| grep -A 1 'hello_amethyst_platformer'<CR>
 nmap <leader>t :!cargo test<CR>
