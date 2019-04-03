@@ -1,5 +1,3 @@
-use amethyst::ecs::world::Index;
-
 use super::system_prelude::*;
 use crate::geo::prelude::*;
 
@@ -20,7 +18,7 @@ impl<'a> System<'a> for CollisionSystem {
         let collision_grid = CollisionGrid::new(
             (&entities, &transforms, sizes.maybe(), &mut collisions)
                 .join()
-                .map(|(entity, transform, size_opt, collision)| {
+                .map(|(entity, transform, size_opt, _)| {
                     let entity_id = entity.id();
                     let pos = transform.translation();
                     // Create a CollisionRect with increased size, for touch collision checking
@@ -32,22 +30,25 @@ impl<'a> System<'a> for CollisionSystem {
                     );
                     // Create four CollisionRects with increased size in every direction,
                     // for side touch collicion checking
-                    let extra_rects =
-                        create_collision_rects_for_sides_from(&rect);
+                    // let extra_rects =
+                    //     create_collision_rects_for_sides_from(&rect);
 
-                    rect.custom = Some(extra_rects);
+                    // rect.custom = Some(extra_rects);
                     rect
                 })
-                .collect::<Vec<CollisionRect<CollisionRectSides>>>(),
+                .collect::<Vec<CollisionRect<()>>>(),
         );
 
         for (entity, collision) in (&entities, &mut collisions).join() {
             if let Some(rect) = collision_grid.rect_by_id(entity.id()) {
                 let colliding = collision_grid.colliding_with(rect);
-                for other_rect in colliding {
-                    if let Some(sides) = &rect.custom {
+                if !colliding.is_empty() {
+                    let rect_side_rects =
+                        create_collision_rects_for_sides_from(rect);
+                    for other_rect in colliding {
                         // Check which side is in collision
-                        if let Some(side) = sides.collides_with_side(other_rect)
+                        if let Some(side) =
+                            rect_side_rects.collides_with_side(other_rect)
                         {
                             collision.set_collision_with(other_rect.id, side);
                         }
@@ -95,8 +96,8 @@ impl CollisionRectSides {
     }
 }
 
-fn create_collision_rects_for_sides_from(
-    rect: &CollisionRect<CollisionRectSides>,
+fn create_collision_rects_for_sides_from<T>(
+    rect: &CollisionRect<T>,
 ) -> CollisionRectSides {
     CollisionRectSides {
         top:    CollisionRect {
