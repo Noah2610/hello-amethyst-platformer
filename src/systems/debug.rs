@@ -11,9 +11,9 @@ pub struct DebugSystem {
 const PRINT_FPS_EVERY_MS: u64 = 500;
 
 impl<'a> System<'a> for DebugSystem {
-    type SystemData = (Read<'a, FPSCounter>);
+    type SystemData = Read<'a, FPSCounter>;
 
-    fn run(&mut self, (fps_counter): Self::SystemData) {
+    fn run(&mut self, fps_counter: Self::SystemData) {
         let now = Instant::now();
         if now - self.last_fps_print
             >= Duration::from_millis(PRINT_FPS_EVERY_MS)

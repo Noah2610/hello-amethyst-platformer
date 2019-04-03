@@ -56,7 +56,7 @@ impl<'a> System<'a> for ControlPlayerSystem {
             // Is standing on solid?
             let is_standing_on_solid = if collision.in_collision() {
                 (&entities, &collisions, &solids).join().any(
-                    |(other_entity, other_collision, _)| {
+                    |(other_entity, _, _)| {
                         if let Some(colliding_with) =
                             collision.collision_with(other_entity.id())
                         {

@@ -14,10 +14,10 @@ impl<'s> System<'s> for ScaleSpritesSystem {
 
     fn run(
         &mut self,
-        (mut entities, spritesheet, sizes, sprites, mut scales, mut transforms): Self::SystemData,
+        (entities, spritesheet, sizes, sprites, mut scales, mut transforms): Self::SystemData,
     ) {
         let mut to_remove = Vec::new();
-        for (entity, size, scale_component, transform, sprite_render) in
+        for (entity, size, _scale_component, transform, sprite_render) in
             (&*entities, &sizes, &scales, &mut transforms, &sprites).join()
         {
             let spritesheet_handle = &sprite_render.sprite_sheet;

@@ -1,6 +1,13 @@
 use super::system_prelude::*;
 use crate::geo::prelude::*;
 
+// NOTE:
+// Consider giving `CollisionSystem` a `CollisionGrid` field, which stores the generated
+// `CollisionGrid` between frames; then only update `CollisionRect`s within the grid, which do not
+// move (which do not have a `Velocity`).
+// This might improve performance, as the `CollisionGrid` wouldn't be re-generated every frame.
+// It would have to re-generate and remove all `CollisionRect`s with moving entities each frame
+// though, so benchmarking would be needed to verify that this would be beneficial.
 pub struct CollisionSystem;
 
 impl<'a> System<'a> for CollisionSystem {
@@ -23,18 +30,12 @@ impl<'a> System<'a> for CollisionSystem {
                     let entity_id = entity.id();
                     let pos = transform.translation();
                     // Create a CollisionRect with increased size, for touch collision checking
-                    let mut rect = CollisionRect::with_custom(
+                    let rect = CollisionRect::with_custom(
                         entity_id,
                         (pos.x - 1.0, pos.y - 1.0),
                         size_opt.map(|size| (size.w + 1.0, size.h + 1.0)),
                         None,
                     );
-                    // Create four CollisionRects with increased size in every direction,
-                    // for side touch collicion checking
-                    // let extra_rects =
-                    //     create_collision_rects_for_sides_from(&rect);
-
-                    // rect.custom = Some(extra_rects);
                     rect
                 })
                 .collect::<Vec<CollisionRect<()>>>(),
