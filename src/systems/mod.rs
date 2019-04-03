@@ -1,5 +1,6 @@
 mod collision;
 mod control_player;
+mod debug;
 mod decrease_velocities;
 mod gravity;
 mod limit_velocities;
@@ -9,6 +10,7 @@ mod scale_sprites;
 pub mod prelude {
     pub use super::CollisionSystem;
     pub use super::ControlPlayerSystem;
+    pub use super::DebugSystem;
     pub use super::DecreaseVelocitiesSystem;
     pub use super::GravitySystem;
     pub use super::LimitVelocitiesSystem;
@@ -45,6 +47,7 @@ mod system_prelude {
 
 pub use collision::CollisionSystem;
 pub use control_player::ControlPlayerSystem;
+pub use debug::DebugSystem;
 pub use decrease_velocities::DecreaseVelocitiesSystem;
 pub use gravity::GravitySystem;
 pub use limit_velocities::LimitVelocitiesSystem;

@@ -101,6 +101,8 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Startup {
         data.data.update(&data.world, GameState::Startup);
 
         if self.is_finished_loading(&data) {
+            // Create new Ingame state first
+            let ingame = Box::new(Ingame);
             // Remove loading text
             if let Some(entity) = self.loading_entity {
                 data.world
@@ -108,7 +110,7 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Startup {
                     .expect("Should delete loading text entity");
             }
             // Switch state
-            return Trans::Switch(Box::new(Ingame));
+            return Trans::Switch(ingame);
         }
 
         Trans::None

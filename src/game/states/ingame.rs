@@ -104,13 +104,25 @@ impl Ingame {
 
         data.world
             .create_entity()
-            .with(transform_two)
+            .with(transform_two.clone())
             .with(Size::from(size_two))
             .with(ScaleOnce)
             .with(Solid)
             .with(sprite_render.clone())
             .with(Collision::new())
             .build();
+
+        for _ in 0 .. 100 {
+            data.world
+                .create_entity()
+                .with(transform_two.clone())
+                .with(Size::from(size_two))
+                .with(ScaleOnce)
+                .with(Solid)
+                // .with(sprite_render.clone())
+                .with(Collision::new())
+                .build();
+        }
     }
 }
 

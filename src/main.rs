@@ -26,6 +26,7 @@ use amethyst::renderer::{
     ALPHA,
 };
 use amethyst::ui::{DrawUi, UiBundle};
+use amethyst::utils::fps_counter::FPSCounterBundle;
 use amethyst::{LogLevelFilter, LoggerConfig};
 
 use resource_helpers::*;
@@ -76,6 +77,7 @@ fn build_game_data<'a, 'b>() -> amethyst::Result<CustomGameDataBuilder<'a, 'b>>
     let input_bundle = InputBundle::<String, String>::new()
         .with_bindings_from_file(&resource("config/bindings.ron"))?;
     let ui_bundle = UiBundle::<String, String>::new();
+    let fps_bundle = FPSCounterBundle;
 
     // Create GameDataBuilder
     let game_data = CustomGameDataBuilder::default()
@@ -84,7 +86,9 @@ fn build_game_data<'a, 'b>() -> amethyst::Result<CustomGameDataBuilder<'a, 'b>>
         .with_base_bundle(transform_bundle)?
         .with_base_bundle(input_bundle)?
         .with_base_bundle(ui_bundle)?
+        .with_base_bundle(fps_bundle)?
         .with_core(ScaleSpritesSystem, "scale_sprites_system", &[])
+        .with_core(DebugSystem::default(), "debug_system", &[])
         .with_ingame(ControlPlayerSystem, "control_player_system", &[])
         .with_ingame(GravitySystem, "gravity_system", &[])
         .with_ingame(LimitVelocitiesSystem, "limit_velocities_system", &[
