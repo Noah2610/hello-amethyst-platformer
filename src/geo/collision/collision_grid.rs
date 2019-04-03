@@ -33,16 +33,6 @@ impl<T> CollisionGrid<T> {
             .collect()
     }
 
-    // pub fn colliding_with_mut(
-    //     &mut self,
-    //     target_rect: &CollisionRect<T>,
-    // ) -> Vec<&mut CollisionRect<T>> {
-    //     self.rects
-    //         .iter_mut()
-    //         .filter(|rect| Self::do_rects_collide(&target_rect, rect))
-    //         .collect()
-    // }
-
     pub fn colliding_with_id(&self, id: Index) -> Vec<&CollisionRect<T>> {
         if let Some(target_rect) = self.rect_by_id(id) {
             self.colliding_with(target_rect)
@@ -51,47 +41,10 @@ impl<T> CollisionGrid<T> {
         }
     }
 
-    // pub fn colliding_with_id_mut(
-    //     &mut self,
-    //     id: Index,
-    // ) -> Vec<&mut CollisionRect<T>> {
-    //     if let Some(target_rect) = self.rects.iter().find(|rect| id == rect.id)
-    //     {
-    //         self.colliding_with_mut(target_rect)
-    //     } else {
-    //         Vec::new()
-    //     }
-    // }
-
-    /// Returns a Vec with groups of colliding CollisionRects
-    // pub fn collision_groups(
-    //     &mut self,
-    // ) -> Vec<(&mut CollisionRect<T>, Vec<&mut CollisionRect<T>>)> {
-    //     let mut id_groups: Vec<(Index, Vec<Index>)> = Vec::new();
-
-    //     unimplemented!()
-
-    //     // self.rects
-    //     //     .iter()
-    //     //     .map(|rect| rect.id)
-    //     //     .filter_map(|rect_id| {
-    //     //         let colliding = self.colliding_with_id(rect_id);
-    //     //         if colliding.is_empty() {
-    //     //             None
-    //     //         } else {
-    //     //             Some((rect_id, colliding))
-    //     //         }
-    //     //     })
-    //     // .map(|entry|
-    //     //     ( self.rects.iter_mut().find(|rect| entry.0 == rect.id).unwrap(), entry.1 )
-    //     // )
-    //     //     .collect::<Vec<(&mut CollisionRect<T>, Vec<&mut CollisionRect<T>>)>>()
-    // }
-
     #[rustfmt::skip]
-    fn do_rects_collide(
-        rect_one: &CollisionRect<T>,
-        rect_two: &CollisionRect<T>,
+    pub fn do_rects_collide<U, V>(
+        rect_one: &CollisionRect<U>,
+        rect_two: &CollisionRect<V>,
     ) -> bool {
         rect_one.id != rect_two.id && (
             (

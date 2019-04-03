@@ -1,4 +1,5 @@
 use super::system_prelude::*;
+use crate::geo::Side;
 
 pub struct ControlPlayerSystem;
 
@@ -9,6 +10,7 @@ impl<'a> System<'a> for ControlPlayerSystem {
         Read<'a, Time>,
         Read<'a, InputHandler<String, String>>,
         ReadStorage<'a, Collision>,
+        ReadStorage<'a, Solid>,
         WriteStorage<'a, Player>,
         WriteStorage<'a, Velocity>,
         WriteStorage<'a, DecreaseVelocity>,
@@ -22,6 +24,7 @@ impl<'a> System<'a> for ControlPlayerSystem {
             time,
             input,
             collisions,
+            solids,
             mut players,
             mut velocities,
             mut decr_velocities,
@@ -50,20 +53,40 @@ impl<'a> System<'a> for ControlPlayerSystem {
                 }
             }
 
-            // Jump
-            if let Some(is_action_down) = input.action_is_down("player_jump") {
-                if is_action_down && !player.is_jump_button_down {
-                    velocity.y += settings.player_jump_strength;
-                }
-                player.is_jump_button_down = is_action_down;
-            }
+            // Is standing on solid?
+            let is_standing_on_solid = if collision.in_collision() {
+                (&entities, &collisions, &solids).join().any(
+                    |(other_entity, other_collision, _)| {
+                        if let Some(colliding_with) =
+                            collision.collision_with(other_entity.id())
+                        {
+                            if let Side::Bottom = colliding_with.side {
+                                true
+                            } else {
+                                false
+                            }
+                        } else {
+                            false
+                        }
+                    },
+                )
+            } else {
+                false
+            };
 
-            if collision.in_collision() {
-                for (entity, other_collision) in (&entities, &collisions).join()
+            if is_standing_on_solid {
+                // Reset y velocity to 0
+                if velocity.y < 0.0 {
+                    velocity.y = 0.0;
+                }
+                // Jump
+                if let Some(is_action_down) =
+                    input.action_is_down("player_jump")
                 {
-                    if collision.in_collision_with(entity.id()) {
-                        println!("PLAYER IS IN COLLISION!!!");
+                    if is_action_down && !player.is_jump_button_down {
+                        velocity.y += settings.player_jump_strength;
                     }
+                    player.is_jump_button_down = is_action_down;
                 }
             }
         }

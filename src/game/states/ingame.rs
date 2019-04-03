@@ -68,13 +68,20 @@ impl Ingame {
     fn initialize_platforms(&self, data: &mut StateData<CustomGameData>) {
         let settings = data.world.settings();
 
-        let mut transform = Transform::default();
-        transform.set_xyz(
+        let mut transform_one = Transform::default();
+        transform_one.set_xyz(
             settings.view_size.0 * 0.5,
             settings.view_size.1 * 0.5 - 100.0,
             0.0,
         );
-        let size = (200.0, 64.0);
+        let mut transform_two = Transform::default();
+        transform_two.set_xyz(
+            settings.view_size.0 * 0.7,
+            settings.view_size.1 * 0.5 + 25.0,
+            0.0,
+        );
+        let size_one = (200.0, 64.0);
+        let size_two = (64.0, 200.0);
 
         let sprite_render = {
             let spritesheet_handle =
@@ -87,11 +94,21 @@ impl Ingame {
 
         data.world
             .create_entity()
-            .with(transform)
-            .with(Size::from(size))
+            .with(transform_one)
+            .with(Size::from(size_one))
             .with(ScaleOnce)
             .with(Solid)
-            .with(sprite_render)
+            .with(sprite_render.clone())
+            .with(Collision::new())
+            .build();
+
+        data.world
+            .create_entity()
+            .with(transform_two)
+            .with(Size::from(size_two))
+            .with(ScaleOnce)
+            .with(Solid)
+            .with(sprite_render.clone())
             .with(Collision::new())
             .build();
     }

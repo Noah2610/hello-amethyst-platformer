@@ -3,6 +3,7 @@ use amethyst::ecs::world::Index;
 use super::super::Vector;
 
 /// A rectangular collision area with a unique entity ID
+#[derive(Clone)]
 pub struct CollisionRect<T> {
     pub id:     Index,
     pub top:    f32,

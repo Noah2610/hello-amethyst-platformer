@@ -3,7 +3,9 @@ use std::collections::HashMap;
 use amethyst::ecs::world::Index;
 
 use super::component_prelude::*;
+use crate::geo::Side;
 
+#[derive(Debug)]
 pub enum State {
     Enter,
     Leave,
@@ -11,7 +13,9 @@ pub enum State {
     None,
 }
 
+#[derive(Debug)]
 pub struct Data {
+    pub side:                 Side,
     pub state:                State,
     set_collision_this_frame: bool,
 }
@@ -38,6 +42,7 @@ impl Data {
 /// Entities with collision perform collision detection against
 /// all other collision entities, every frame.
 /// Depending on if they are in collision, data will be set.
+#[derive(Debug)]
 pub struct Collision {
     pub collisions: HashMap<Index, Data>,
 }
@@ -69,7 +74,7 @@ impl Collision {
     }
 
     /// Is called when an entity is colliding with this entity
-    pub fn set_collision_with(&mut self, entity_id: Index) {
+    pub fn set_collision_with(&mut self, entity_id: Index, side: Side) {
         if let Some(data) = self.collisions.get_mut(&entity_id) {
             // Set state of colliding entity to ...
             data.state = match data.state {
@@ -81,7 +86,8 @@ impl Collision {
             data.set_collision_this_frame = true;
         } else {
             self.collisions.insert(entity_id, Data {
-                state:                    State::Enter,
+                side,
+                state: State::Enter,
                 set_collision_this_frame: true,
             });
         }
