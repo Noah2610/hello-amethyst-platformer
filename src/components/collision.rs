@@ -39,8 +39,8 @@ impl Data {
     }
 }
 
-/// Entities with collision perform collision detection against
-/// all other collision entities, every frame.
+/// Entities with `CheckCollision` perform collision detection against
+/// all other entities with `Collision`, every frame.
 /// Depending on if they are in collision, data will be set.
 #[derive(Debug)]
 pub struct Collision {

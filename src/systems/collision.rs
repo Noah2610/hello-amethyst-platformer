@@ -8,12 +8,13 @@ impl<'a> System<'a> for CollisionSystem {
         Entities<'a>,
         ReadStorage<'a, Transform>,
         ReadStorage<'a, Size>,
+        ReadStorage<'a, CheckCollision>,
         WriteStorage<'a, Collision>,
     );
 
     fn run(
         &mut self,
-        (entities, transforms, sizes, mut collisions): Self::SystemData,
+        (entities, transforms, sizes, check_collisions, mut collisions): Self::SystemData,
     ) {
         let collision_grid = CollisionGrid::new(
             (&entities, &transforms, sizes.maybe(), &mut collisions)
@@ -39,7 +40,9 @@ impl<'a> System<'a> for CollisionSystem {
                 .collect::<Vec<CollisionRect<()>>>(),
         );
 
-        for (entity, collision) in (&entities, &mut collisions).join() {
+        for (entity, collision, _) in
+            (&entities, &mut collisions, &check_collisions).join()
+        {
             if let Some(rect) = collision_grid.rect_by_id(entity.id()) {
                 let colliding = collision_grid.colliding_with(rect);
                 if !colliding.is_empty() {
@@ -62,6 +65,7 @@ impl<'a> System<'a> for CollisionSystem {
 }
 
 struct CollisionRectSides {
+    pub inner:  CollisionRect<Side>,
     pub top:    CollisionRect<Side>,
     pub bottom: CollisionRect<Side>,
     pub left:   CollisionRect<Side>,
@@ -75,7 +79,10 @@ impl CollisionRectSides {
     ) -> Option<Side> {
         let expect_msg =
             "`CollisionRect` (for sides) should have custom data with `Side`";
-        if CollisionGrid::<()>::do_rects_collide(target_rect, &self.top) {
+        if CollisionGrid::<()>::do_rects_collide(target_rect, &self.inner) {
+            Some(self.inner.custom.expect(expect_msg))
+        } else if CollisionGrid::<()>::do_rects_collide(target_rect, &self.top)
+        {
             Some(self.top.custom.expect(expect_msg))
         } else if CollisionGrid::<()>::do_rects_collide(
             target_rect,
@@ -100,6 +107,14 @@ fn create_collision_rects_for_sides_from<T>(
     rect: &CollisionRect<T>,
 ) -> CollisionRectSides {
     CollisionRectSides {
+        inner:  CollisionRect {
+            id:     rect.id,
+            top:    rect.top - 1.0,
+            bottom: rect.bottom + 1.0,
+            left:   rect.left + 1.0,
+            right:  rect.right - 1.0,
+            custom: Some(Side::Inner),
+        },
         top:    CollisionRect {
             id:     rect.id,
             top:    rect.top,

@@ -62,6 +62,7 @@ impl Ingame {
             .with(Gravity::from(settings.player_gravity))
             .with(Solid)
             .with(Collision::new())
+            .with(CheckCollision)
             .build();
     }
 

@@ -1,3 +1,4 @@
+mod check_collision;
 pub mod collision;
 mod decrease_velocity;
 mod gravity;
@@ -12,6 +13,7 @@ pub mod prelude {
     pub use amethyst::core::transform::Transform;
 
     pub use super::collision;
+    pub use super::CheckCollision;
     pub use super::Collision;
     pub use super::DecreaseVelocity;
     pub use super::Gravity;
@@ -39,6 +41,7 @@ mod component_prelude {
     };
 }
 
+pub use check_collision::CheckCollision;
 pub use collision::Collision;
 pub use decrease_velocity::DecreaseVelocity;
 pub use gravity::Gravity;
