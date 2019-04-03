@@ -92,6 +92,35 @@ impl<'a> System<'a> for ControlPlayerSystem {
                 } {
                     velocity.x = 0.0;
                 }
+                if touching_vertically_side.is_none() {
+                    // Keep (positive/downwards) y velocity at a constant; slide on wall
+                    let slide_strength = -10.0; // TODO: put this settings ron file
+                    if velocity.y < slide_strength {
+                        velocity.y = -10.0;
+                    }
+                    // Wall Jump
+                    if let Some(is_action_down) =
+                        input.action_is_down("player_jump")
+                    {
+                        if is_action_down && !player.is_jump_button_down {
+                            if velocity.y < 0.0 {
+                                velocity.y = 0.0;
+                            }
+                            velocity.y += settings.player_jump_strength;
+                            // TODO: Have separate `player_wall_jump_strength` setting
+                            match side_hor {
+                                Side::Left => {
+                                    velocity.x += settings.player_jump_strength
+                                }
+                                Side::Right => {
+                                    velocity.x -= settings.player_jump_strength
+                                }
+                                _ => (),
+                            }
+                        }
+                        player.is_jump_button_down = is_action_down;
+                    }
+                }
             }
 
             if let Some(side_vert) = touching_vertically_side {
