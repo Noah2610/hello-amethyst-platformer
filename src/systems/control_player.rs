@@ -53,40 +53,66 @@ impl<'a> System<'a> for ControlPlayerSystem {
                 }
             }
 
-            // Is standing on solid?
-            let is_standing_on_solid = if collision.in_collision() {
-                (&entities, &collisions, &solids).join().any(
-                    |(other_entity, _, _)| {
-                        if let Some(colliding_with) =
-                            collision.collision_with(other_entity.id())
-                        {
-                            if let Side::Bottom = colliding_with.side {
-                                true
-                            } else {
-                                false
+            // Is standing on solid? Is touching a solid (horizontally)?
+            let mut touching_vertically_side = None;
+            let mut touching_horizontally_side = None;
+            if collision.in_collision() {
+                for (other_entity, _, _) in
+                    (&entities, &collisions, &solids).join()
+                {
+                    if let Some(colliding_with) =
+                        collision.collision_with(other_entity.id())
+                    {
+                        match colliding_with.side {
+                            Side::Top | Side::Bottom => {
+                                touching_vertically_side =
+                                    Some(colliding_with.side)
                             }
-                        } else {
-                            false
+                            Side::Left | Side::Right => {
+                                touching_horizontally_side =
+                                    Some(colliding_with.side)
+                            }
+                            _ => (),
                         }
-                    },
-                )
-            } else {
-                false
-            };
+                        if touching_vertically_side.is_some()
+                            && touching_horizontally_side.is_some()
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
 
-            if is_standing_on_solid {
+            if let Some(side_hor) = touching_horizontally_side {
+                // Reset x velocity to 0
+                if match side_hor {
+                    Side::Left => velocity.x < 0.0,
+                    Side::Right => velocity.x > 0.0,
+                    _ => false,
+                } {
+                    velocity.x = 0.0;
+                }
+            }
+
+            if let Some(side_vert) = touching_vertically_side {
                 // Reset y velocity to 0
-                if velocity.y < 0.0 {
+                if match side_vert {
+                    Side::Top => velocity.y > 0.0,
+                    Side::Bottom => velocity.y < 0.0,
+                    _ => false,
+                } {
                     velocity.y = 0.0;
                 }
                 // Jump
-                if let Some(is_action_down) =
-                    input.action_is_down("player_jump")
-                {
-                    if is_action_down && !player.is_jump_button_down {
-                        velocity.y += settings.player_jump_strength;
+                if let Side::Bottom = side_vert {
+                    if let Some(is_action_down) =
+                        input.action_is_down("player_jump")
+                    {
+                        if is_action_down && !player.is_jump_button_down {
+                            velocity.y += settings.player_jump_strength;
+                        }
+                        player.is_jump_button_down = is_action_down;
                     }
-                    player.is_jump_button_down = is_action_down;
                 }
             }
         }
