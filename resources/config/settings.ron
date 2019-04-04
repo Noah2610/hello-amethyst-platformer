@@ -1,6 +1,6 @@
 Settings(
   camera_size:          (600.0, 400.0),
-  camera_inner_size:    (100.0, 200.0),
+  camera_inner_size:    (300.0, 200.0),
   player_size:          (16.0,  32.0),
   player_speed:         (500.0, 0.0),
   player_jump_strength: 400.0,

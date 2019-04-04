@@ -3,22 +3,39 @@ use amethyst::ecs::world::Index;
 use super::system_prelude::*;
 use crate::geo::{CollisionGrid, CollisionRect, Vector};
 
+// TODO: Move constants into settings.ron file
+const BASE_SPEED: (f32, f32) = (250.0, 250.0);
+const MOVE_IN_PADDING: f32 = 10.0;
+
 pub struct CameraSystem;
 
 impl<'a> System<'a> for CameraSystem {
     type SystemData = (
         Entities<'a>,
+        Read<'a, Time>,
         ReadStorage<'a, Camera>,
         ReadStorage<'a, Player>,
         ReadStorage<'a, Size>,
         ReadStorage<'a, InnerSize>,
         WriteStorage<'a, Transform>,
+        WriteStorage<'a, Velocity>,
     );
 
     fn run(
         &mut self,
-        (entities, cameras, players, sizes, inner_sizes, mut transforms): Self::SystemData,
+        (
+            entities,
+            time,
+            cameras,
+            players,
+            sizes,
+            inner_sizes,
+            mut transforms,
+            mut velocities,
+        ): Self::SystemData,
     ) {
+        let dt = time.delta_seconds();
+
         let player_data_opt =
             (&entities, &players, &transforms, (&sizes).maybe())
                 .join()
@@ -37,12 +54,20 @@ impl<'a> System<'a> for CameraSystem {
                 });
 
         if let Some((player_id, player_pos, player_size)) = player_data_opt {
-            for (entity, camera, transform, size, inner_size_opt) in (
+            for (
+                entity,
+                camera,
+                transform,
+                size,
+                inner_size_opt,
+                velocity_opt,
+            ) in (
                 &entities,
                 &cameras,
                 &mut transforms,
                 &sizes,
                 inner_sizes.maybe(),
+                (&mut velocities).maybe(),
             )
                 .join()
             {
@@ -65,16 +90,20 @@ impl<'a> System<'a> for CameraSystem {
                         (inner_size.0.w, inner_size.0.h),
                     ));
 
+                    let mut colliding_any = false;
+
                     // Vertical rects (top/bottom)
                     if CollisionGrid::<()>::do_rects_collide(
                         &player_rect,
                         &camera_rects.top.0,
                     ) {
+                        colliding_any = true;
                         transform.set_y(center.1 - inner_size.0.h * 0.5);
                     } else if CollisionGrid::<()>::do_rects_collide(
                         &player_rect,
                         &camera_rects.bottom.0,
                     ) {
+                        colliding_any = true;
                         transform.set_y(center.1 + inner_size.0.h * 0.5);
                     }
                     // Horizontal rects (left/right)
@@ -82,12 +111,39 @@ impl<'a> System<'a> for CameraSystem {
                         &player_rect,
                         &camera_rects.left.0,
                     ) {
+                        colliding_any = true;
                         transform.set_x(center.0 + inner_size.0.w * 0.5);
                     } else if CollisionGrid::<()>::do_rects_collide(
                         &player_rect,
                         &camera_rects.right.0,
                     ) {
+                        colliding_any = true;
                         transform.set_x(center.0 - inner_size.0.w * 0.5);
+                    }
+
+                    // When not in collision with outer camera rects,
+                    // slowly position camera on player.
+                    if let Some(velocity) = velocity_opt {
+                        if !colliding_any {
+                            let dist = (
+                                (player_pos.0 - camera_center.0).abs(),
+                                (player_pos.1 - camera_center.1).abs(),
+                            );
+                            if dist.0 <= MOVE_IN_PADDING {
+                                velocity.x = 0.0;
+                            } else if player_pos.0 > camera_center.0 {
+                                velocity.x = BASE_SPEED.0 * dist.0 * dt;
+                            } else if player_pos.0 < camera_center.0 {
+                                velocity.x = -BASE_SPEED.0 * dist.0 * dt;
+                            }
+                            if dist.1 <= MOVE_IN_PADDING {
+                                velocity.y = 0.0;
+                            } else if player_pos.1 > camera_center.1 {
+                                velocity.y = BASE_SPEED.1 * dist.1 * dt;
+                            } else if player_pos.1 < camera_center.1 {
+                                velocity.y = -BASE_SPEED.1 * dist.1 * dt;
+                            }
+                        }
                     }
                 } else {
                     transform.set_x(center.0);

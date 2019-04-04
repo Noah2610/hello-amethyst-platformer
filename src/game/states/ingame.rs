@@ -29,6 +29,7 @@ impl Ingame {
             .with(transform)
             .with(Size::from(settings.camera_size))
             .with(InnerSize(Size::from(settings.camera_inner_size)))
+            .with(Velocity::default())
             .with(Collision::new())
             .build();
     }
@@ -117,17 +118,17 @@ impl Ingame {
             .with(Collision::new())
             .build();
 
-        for _ in 0 .. 100 {
-            data.world
-                .create_entity()
-                .with(transform_two.clone())
-                .with(Size::from(size_two))
-                .with(ScaleOnce)
-                .with(Solid)
-                // .with(sprite_render.clone())
-                .with(Collision::new())
-                .build();
-        }
+        // for _ in 0 .. 100 {
+        //     data.world
+        //         .create_entity()
+        //         .with(transform_two.clone())
+        //         .with(Size::from(size_two))
+        //         .with(ScaleOnce)
+        //         .with(Solid)
+        //         // .with(sprite_render.clone())
+        //         .with(Collision::new())
+        //         .build();
+        // }
     }
 }
 
