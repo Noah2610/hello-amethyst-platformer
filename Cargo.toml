@@ -9,6 +9,9 @@ amethyst = "0.10.0"
 ron      = "0.4.2"
 serde    = { version = "1.0.89", features = ["derive"] }
 
+[replace]
+"lewton:0.9.4" = { path = "./lewton" } # cross-compilation to windows doesn't work with lewton 0.9.4
+
 [profile.dev]
 opt-level        = 1
 debug            = true
