@@ -21,13 +21,15 @@ impl Ingame {
         world
             .create_entity()
             .with(Camera::from(Projection::orthographic(
-                0.0,                  // Left
-                settings.view_size.0, // Right
-                0.0,                  // Bottom (!)
-                settings.view_size.1, // Top    (!)
+                0.0,                    // Left
+                settings.camera_size.0, // Right
+                0.0,                    // Bottom (!)
+                settings.camera_size.1, // Top    (!)
             )))
             .with(transform)
-            .with(Size::from(settings.view_size))
+            .with(Size::from(settings.camera_size))
+            .with(InnerSize(Size::from(settings.camera_inner_size)))
+            .with(Collision::new())
             .build();
     }
 
@@ -36,8 +38,8 @@ impl Ingame {
 
         let mut transform = Transform::default();
         transform.set_xyz(
-            settings.view_size.0 * 0.5,
-            settings.view_size.1 * 0.5,
+            settings.camera_size.0 * 0.5,
+            settings.camera_size.1 * 0.5,
             0.0,
         );
 
@@ -73,14 +75,14 @@ impl Ingame {
 
         let mut transform_one = Transform::default();
         transform_one.set_xyz(
-            settings.view_size.0 * 0.5,
-            settings.view_size.1 * 0.5 - 100.0,
+            settings.camera_size.0 * 0.5,
+            settings.camera_size.1 * 0.5 - 100.0,
             0.0,
         );
         let mut transform_two = Transform::default();
         transform_two.set_xyz(
-            settings.view_size.0 * 0.7,
-            settings.view_size.1 * 0.5 + 25.0,
+            settings.camera_size.0 * 0.7,
+            settings.camera_size.1 * 0.5 + 25.0,
             0.0,
         );
         let size_one = (200.0, 64.0);
