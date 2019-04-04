@@ -100,6 +100,7 @@ fn build_game_data<'a, 'b>() -> amethyst::Result<CustomGameDataBuilder<'a, 'b>>
             "gravity_system",
             "limit_velocities_system",
         ])
+        .with_ingame(CameraSystem, "camera_system", &["move_entities_system"])
         .with_ingame(CollisionSystem, "collision_system", &[
             "move_entities_system",
         ])

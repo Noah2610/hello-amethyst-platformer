@@ -1,3 +1,4 @@
+mod camera;
 mod collision;
 mod control_player;
 mod debug;
@@ -8,6 +9,7 @@ mod move_entities;
 mod scale_sprites;
 
 pub mod prelude {
+    pub use super::CameraSystem;
     pub use super::CollisionSystem;
     pub use super::ControlPlayerSystem;
     pub use super::DebugSystem;
@@ -45,6 +47,7 @@ mod system_prelude {
     pub use crate::settings::prelude::*;
 }
 
+pub use camera::CameraSystem;
 pub use collision::CollisionSystem;
 pub use control_player::ControlPlayerSystem;
 pub use debug::DebugSystem;

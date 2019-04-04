@@ -11,6 +11,7 @@ mod velocity;
 
 pub mod prelude {
     pub use amethyst::core::transform::Transform;
+    pub use amethyst::renderer::Camera;
 
     pub use super::collision;
     pub use super::CheckCollision;

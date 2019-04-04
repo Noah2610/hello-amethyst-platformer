@@ -17,6 +17,7 @@ impl Ingame {
 
         let mut transform = Transform::default();
         transform.set_z(1.0);
+
         world
             .create_entity()
             .with(Camera::from(Projection::orthographic(
@@ -26,6 +27,7 @@ impl Ingame {
                 settings.view_size.1, // Top    (!)
             )))
             .with(transform)
+            .with(Size::from(settings.view_size))
             .build();
     }
 
