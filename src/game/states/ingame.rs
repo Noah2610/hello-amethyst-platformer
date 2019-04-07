@@ -118,6 +118,54 @@ impl Ingame {
             .with(Collision::new())
             .build();
 
+        let mut transform = Transform::default();
+        transform.set_xyz(100.0, 200.0, 0.0);
+        data.world
+            .create_entity()
+            .with(transform)
+            .with(Size::from(size_two))
+            .with(ScaleOnce)
+            .with(Solid)
+            .with(sprite_render.clone())
+            .with(Collision::new())
+            .build();
+
+        let mut transform = Transform::default();
+        transform.set_xyz(settings.camera_size.0, 0.0, 0.0);
+        data.world
+            .create_entity()
+            .with(transform)
+            .with(Size::new(3200.0, 200.0))
+            .with(ScaleOnce)
+            .with(Solid)
+            .with(sprite_render.clone())
+            .with(Collision::new())
+            .build();
+
+        let mut transform = Transform::default();
+        transform.set_xyz(settings.camera_size.0 * 2.0, 0.0, 0.0);
+        data.world
+            .create_entity()
+            .with(transform)
+            .with(Size::new(70.0, 1600.0))
+            .with(ScaleOnce)
+            .with(Solid)
+            .with(sprite_render.clone())
+            .with(Collision::new())
+            .build();
+
+        let mut transform = Transform::default();
+        transform.set_xyz(settings.camera_size.0 * 2.0 + 100.0, 0.0, 0.0);
+        data.world
+            .create_entity()
+            .with(transform)
+            .with(Size::new(50.0, 1600.0))
+            .with(ScaleOnce)
+            .with(Solid)
+            .with(sprite_render.clone())
+            .with(Collision::new())
+            .build();
+
         // for _ in 0 .. 100 {
         //     data.world
         //         .create_entity()
