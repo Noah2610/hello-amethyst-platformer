@@ -71,6 +71,11 @@ impl<'a> System<'a> for CameraSystem {
             )
                 .join()
             {
+                // player_pos is at TOP-LEFT of player sprite for some reason... i'm confused...
+                let player_pos = (
+                    player_pos.0 + player_size.0 * 0.5,
+                    player_pos.1 - player_size.1 * 0.5,
+                );
                 let center =
                     (player_pos.0 - size.w * 0.5, player_pos.1 - size.h * 0.5);
                 let camera_pos = transform.translation();
@@ -90,59 +95,68 @@ impl<'a> System<'a> for CameraSystem {
                         (inner_size.0.w, inner_size.0.h),
                     ));
 
-                    let mut colliding_any = false;
+                    let mut colliding_x = false;
+                    let mut colliding_y = false;
 
                     // Vertical rects (top/bottom)
                     if CollisionGrid::<()>::do_rects_collide(
                         &player_rect,
-                        &camera_rects.top.0,
+                        &camera_rects.top,
                     ) {
-                        colliding_any = true;
-                        transform.set_y(center.1 - inner_size.0.h * 0.5);
+                        colliding_y = true;
+                        transform
+                            .set_y((center.1 - inner_size.0.h * 0.5).ceil());
                     } else if CollisionGrid::<()>::do_rects_collide(
                         &player_rect,
-                        &camera_rects.bottom.0,
+                        &camera_rects.bottom,
                     ) {
-                        colliding_any = true;
-                        transform.set_y(center.1 + inner_size.0.h * 0.5);
+                        colliding_y = true;
+                        transform
+                            .set_y((center.1 + inner_size.0.h * 0.5).floor());
                     }
                     // Horizontal rects (left/right)
                     if CollisionGrid::<()>::do_rects_collide(
                         &player_rect,
-                        &camera_rects.left.0,
+                        &camera_rects.left,
                     ) {
-                        colliding_any = true;
-                        transform.set_x(center.0 + inner_size.0.w * 0.5);
+                        colliding_x = true;
+                        transform
+                            .set_x((center.0 + inner_size.0.w * 0.5).floor());
                     } else if CollisionGrid::<()>::do_rects_collide(
                         &player_rect,
-                        &camera_rects.right.0,
+                        &camera_rects.right,
                     ) {
-                        colliding_any = true;
-                        transform.set_x(center.0 - inner_size.0.w * 0.5);
+                        colliding_x = true;
+                        transform
+                            .set_x((center.0 - inner_size.0.w * 0.5).ceil());
                     }
 
                     // When not in collision with outer camera rects,
                     // slowly position camera on player.
                     if let Some(velocity) = velocity_opt {
-                        if !colliding_any {
-                            let dist = (
-                                (player_pos.0 - camera_center.0).abs(),
-                                (player_pos.1 - camera_center.1).abs(),
-                            );
-                            if dist.0 <= MOVE_IN_PADDING {
+                        if !colliding_x {
+                            let dist = (player_pos.0 - camera_center.0).abs();
+                            if dist <= MOVE_IN_PADDING {
                                 velocity.x = 0.0;
                             } else if player_pos.0 > camera_center.0 {
-                                velocity.x = BASE_SPEED.0 * dist.0 * dt;
+                                velocity.x = BASE_SPEED.0 * dist * dt;
                             } else if player_pos.0 < camera_center.0 {
-                                velocity.x = -BASE_SPEED.0 * dist.0 * dt;
+                                velocity.x = -BASE_SPEED.0 * dist * dt;
                             }
-                            if dist.1 <= MOVE_IN_PADDING {
+                        } else {
+                            velocity.x = 0.0;
+                        }
+                        if !colliding_y {
+                            let dist = (player_pos.1 - camera_center.1).abs();
+                            if dist <= MOVE_IN_PADDING {
                                 velocity.y = 0.0;
                             } else if player_pos.1 > camera_center.1 {
-                                velocity.y = BASE_SPEED.1 * dist.1 * dt;
+                                velocity.y = BASE_SPEED.1 * dist * dt;
                             } else if player_pos.1 < camera_center.1 {
-                                velocity.y = -BASE_SPEED.1 * dist.1 * dt;
+                                velocity.y = -BASE_SPEED.1 * dist * dt;
                             }
+                        } else {
+                            velocity.y = 0.0;
                         }
                     }
                 } else {
@@ -155,10 +169,10 @@ impl<'a> System<'a> for CameraSystem {
 }
 
 struct CameraCollisionRects {
-    pub top:    (CollisionRect<()>, f32),
-    pub bottom: (CollisionRect<()>, f32),
-    pub left:   (CollisionRect<()>, f32),
-    pub right:  (CollisionRect<()>, f32),
+    pub top:    CollisionRect<()>,
+    pub bottom: CollisionRect<()>,
+    pub left:   CollisionRect<()>,
+    pub right:  CollisionRect<()>,
 }
 
 impl From<(Index, Vector, Vector, Vector)> for CameraCollisionRects {
@@ -168,37 +182,25 @@ impl From<(Index, Vector, Vector, Vector)> for CameraCollisionRects {
         let size_x = ((size.0 - inner_size.0) * 0.5, size.1);
         let size_y = (size.0, (size.1 - inner_size.1) * 0.5);
         CameraCollisionRects {
-            top:    (
-                CollisionRect::new(
-                    id,
-                    (pos.0, pos.1 + size.1 * 0.5 - size_y.1 * 0.5),
-                    Some(size_y),
-                ),
-                pos.1,
+            top:    CollisionRect::new(
+                id,
+                (pos.0, pos.1 + size.1 * 0.5 - size_y.1 * 0.5),
+                Some(size_y),
             ),
-            bottom: (
-                CollisionRect::new(
-                    id,
-                    (pos.0, pos.1 - size.1 * 0.5 + size_y.1 * 0.5),
-                    Some(size_y),
-                ),
-                pos.1,
+            bottom: CollisionRect::new(
+                id,
+                (pos.0, pos.1 - size.1 * 0.5 + size_y.1 * 0.5),
+                Some(size_y),
             ),
-            left:   (
-                CollisionRect::new(
-                    id,
-                    (pos.0 - size.0 * 0.5 + size_x.0 * 0.5, pos.1),
-                    Some(size_x),
-                ),
-                pos.0,
+            left:   CollisionRect::new(
+                id,
+                (pos.0 - size.0 * 0.5 + size_x.0 * 0.5, pos.1),
+                Some(size_x),
             ),
-            right:  (
-                CollisionRect::new(
-                    id,
-                    (pos.0 + size.0 * 0.5 - size_x.0 * 0.5, pos.1),
-                    Some(size_x),
-                ),
-                pos.0,
+            right:  CollisionRect::new(
+                id,
+                (pos.0 + size.0 * 0.5 - size_x.0 * 0.5, pos.1),
+                Some(size_x),
             ),
         }
     }

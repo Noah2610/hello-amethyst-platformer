@@ -51,6 +51,28 @@ impl Ingame {
 
         const TILE_SIZE: (f32, f32) = (32.0, 32.0); // TODO: Read this data from tileset JSON file
 
+        // OBJECTS
+        for object_data in json["objects"].members() {
+            if let (Some(obj_type), (Some(x), Some(y)), (Some(w), Some(h))) = (
+                object_data["type"].as_str(),
+                (
+                    object_data["pos"]["x"].as_f32(),
+                    object_data["pos"]["y"].as_f32(),
+                ),
+                (
+                    object_data["size"]["w"].as_f32(),
+                    object_data["size"]["h"].as_f32(),
+                ),
+            ) {
+                match obj_type {
+                    "Player" => {
+                        self.initialize_player_with(data, (x, y), (w, h))
+                    }
+                    _ => (),
+                }
+            }
+        }
+
         // TILES
         for tile_data in json["tiles"].members() {
             if let (Some(id), (Some(x), Some(y)), component_names) = (
@@ -93,28 +115,6 @@ impl Ingame {
                 entity.build();
             }
         }
-
-        // OBJECTS
-        for object_data in json["objects"].members() {
-            if let (Some(obj_type), (Some(x), Some(y)), (Some(w), Some(h))) = (
-                object_data["type"].as_str(),
-                (
-                    object_data["pos"]["x"].as_f32(),
-                    object_data["pos"]["y"].as_f32(),
-                ),
-                (
-                    object_data["size"]["w"].as_f32(),
-                    object_data["size"]["h"].as_f32(),
-                ),
-            ) {
-                match obj_type {
-                    "Player" => {
-                        self.initialize_player_with(data, (x, y), (w, h))
-                    }
-                    _ => (),
-                }
-            }
-        }
     }
 
     fn initialize_player_with(
@@ -127,6 +127,7 @@ impl Ingame {
 
         let mut transform = Transform::default();
         transform.set_xyz(pos.0, pos.1, 0.0);
+        // transform.set_xyz(0.0, 0.0, 0.0);
         // let size = Size::from(settings.player_size);
         let size = Size::from(size);
 
