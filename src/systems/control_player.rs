@@ -94,9 +94,9 @@ impl<'a> System<'a> for ControlPlayerSystem {
                 }
                 if touching_vertically_side.is_none() {
                     // Keep (positive/downwards) y velocity at a constant; slide on wall
-                    let slide_strength = -10.0; // TODO: put this settings ron file
+                    let slide_strength = -settings.player_slide_strength;
                     if velocity.y < slide_strength {
-                        velocity.y = -10.0;
+                        velocity.y = slide_strength;
                     }
                     // Wall Jump
                     if let Some(is_action_down) =
