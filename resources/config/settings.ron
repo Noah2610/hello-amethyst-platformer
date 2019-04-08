@@ -1,10 +1,10 @@
 Settings(
-  camera_size:          (600.0, 400.0),
+  camera_size:          (1200.0, 800.0),
   camera_inner_size:    (300.0, 200.0),
-  player_size:          (16.0,  32.0),
-  player_speed:         (500.0, 0.0),
-  player_jump_strength: 400.0,
-  player_max_velocity:  (Some(200.0), None),
-  player_decr_velocity: (500.0, 1000.0),
-  player_gravity:       (0.0,   -500.0),
+  player_size:          (16.0,  32.0),  // This is not used currently. Size is read from map.json
+  player_speed:         (1500.0, 0.0),
+  player_jump_strength: 600.0,
+  player_max_velocity:  (Some(300.0), None),
+  player_decr_velocity: (2000.0, 1000.0),
+  player_gravity:       (0.0,   -750.0),
 )

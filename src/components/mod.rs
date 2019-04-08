@@ -55,3 +55,17 @@ pub use scale_once::ScaleOnce;
 pub use size::Size;
 pub use solid::Solid;
 pub use velocity::Velocity;
+
+use amethyst::ecs::EntityBuilder;
+use amethyst::prelude::Builder;
+pub fn add_component_by_name<'a>(
+    mut entity: EntityBuilder<'a>,
+    component_name: &str,
+) -> EntityBuilder<'a> {
+    match component_name {
+        "Collision" => entity = entity.with(collision::Collision::new()),
+        "Solid" => entity = entity.with(solid::Solid),
+        _ => (),
+    }
+    entity
+}

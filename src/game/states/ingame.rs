@@ -1,6 +1,7 @@
 use super::state_prelude::*;
 use super::Paused;
 use crate::components::prelude::*;
+use crate::geo::Vector;
 
 pub struct Ingame;
 
@@ -34,15 +35,100 @@ impl Ingame {
             .build();
     }
 
-    fn initialize_player(&self, data: &mut StateData<CustomGameData>) {
+    fn load_map(&self, data: &mut StateData<CustomGameData>) {
+        use std::fs::File;
+        use std::io::prelude::*;
+
+        use crate::components;
+
+        let map_filepath = resource("map.json");
+        let mut file = File::open(map_filepath)
+            .expect("Should open file for reading: map.json");
+        let mut json_raw = String::new();
+        file.read_to_string(&mut json_raw)
+            .expect("Should read file content: map.json");
+        let json = json::parse(&json_raw).expect("Could not parse JSON");
+
+        const TILE_SIZE: (f32, f32) = (32.0, 32.0); // TODO: Read this data from tileset JSON file
+
+        // TILES
+        for tile_data in json["tiles"].members() {
+            if let (Some(id), (Some(x), Some(y)), component_names) = (
+                tile_data["id"].as_usize(),
+                (
+                    tile_data["pos"]["x"].as_f32(),
+                    tile_data["pos"]["y"].as_f32(),
+                ),
+                tile_data["properties"]["components"].members(),
+            ) {
+                let mut pos = Transform::default();
+                pos.set_xyz(x, y, 0.0);
+
+                let sprite_render = {
+                    let spritesheet_handle =
+                        data.world.read_resource::<SpriteSheetHandle>();
+                    SpriteRender {
+                        sprite_sheet:  spritesheet_handle.clone(),
+                        sprite_number: id,
+                    }
+                };
+
+                let mut entity = data
+                    .world
+                    .create_entity()
+                    .with(pos)
+                    .with(Size::from(TILE_SIZE))
+                    .with(ScaleOnce)
+                    .with(sprite_render);
+
+                for component_name in component_names {
+                    entity = components::add_component_by_name(
+                        entity,
+                        component_name
+                            .as_str()
+                            .expect("Could not parse string JSON"),
+                    );
+                }
+
+                entity.build();
+            }
+        }
+
+        // OBJECTS
+        for object_data in json["objects"].members() {
+            if let (Some(obj_type), (Some(x), Some(y)), (Some(w), Some(h))) = (
+                object_data["type"].as_str(),
+                (
+                    object_data["pos"]["x"].as_f32(),
+                    object_data["pos"]["y"].as_f32(),
+                ),
+                (
+                    object_data["size"]["w"].as_f32(),
+                    object_data["size"]["h"].as_f32(),
+                ),
+            ) {
+                match obj_type {
+                    "Player" => {
+                        self.initialize_player_with(data, (x, y), (w, h))
+                    }
+                    _ => (),
+                }
+            }
+        }
+    }
+
+    fn initialize_player_with(
+        &self,
+        data: &mut StateData<CustomGameData>,
+        pos: Vector,
+        size: Vector,
+    ) {
         let settings = data.world.settings();
 
         let mut transform = Transform::default();
-        transform.set_xyz(
-            settings.camera_size.0 * 0.5,
-            settings.camera_size.1 * 0.5,
-            0.0,
-        );
+        transform.set_xyz(pos.0, pos.1, 0.0);
+        // let size = Size::from(settings.player_size);
+        let size = Size::from(size);
 
         let sprite_render = {
             let spritesheet_handle =
@@ -62,7 +148,7 @@ impl Ingame {
             .with(Velocity::default())
             .with(MaxVelocity::from(settings.player_max_velocity))
             .with(DecreaseVelocity::from(settings.player_decr_velocity))
-            .with(Size::from(settings.player_size))
+            .with(size)
             .with(ScaleOnce)
             .with(Gravity::from(settings.player_gravity))
             .with(Solid)
@@ -185,8 +271,9 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Ingame {
         self.register_components(&mut data.world);
 
         self.initialize_camera(&mut data.world);
-        self.initialize_platforms(&mut data);
-        self.initialize_player(&mut data);
+        // self.initialize_platforms(&mut data);
+        // self.initialize_player(&mut data);
+        self.load_map(&mut data);
     }
 
     fn handle_event(
