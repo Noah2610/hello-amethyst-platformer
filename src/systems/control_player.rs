@@ -14,6 +14,7 @@ impl<'a> System<'a> for ControlPlayerSystem {
         WriteStorage<'a, Player>,
         WriteStorage<'a, Velocity>,
         WriteStorage<'a, DecreaseVelocity>,
+        WriteStorage<'a, Gravity>,
     );
 
     fn run(
@@ -28,16 +29,19 @@ impl<'a> System<'a> for ControlPlayerSystem {
             mut players,
             mut velocities,
             mut decr_velocities,
+            mut gravities,
         ): Self::SystemData,
     ) {
         let dt = time.delta_seconds();
-        for (player, velocity, mut decr_velocity, collision) in (
-            &mut players,
-            &mut velocities,
-            (&mut decr_velocities).maybe(),
-            &collisions,
-        )
-            .join()
+        for (player, velocity, mut decr_velocity, collision, mut gravity_opt) in
+            (
+                &mut players,
+                &mut velocities,
+                (&mut decr_velocities).maybe(),
+                &collisions,
+                (&mut gravities).maybe(),
+            )
+                .join()
         {
             // Move left/right, on X axis
             if let Some(x) = input.axis_value("player_x") {
@@ -123,7 +127,11 @@ impl<'a> System<'a> for ControlPlayerSystem {
                 }
             }
 
+            let mut standing_on_floor = false;
             if let Some(side_vert) = touching_vertically_side {
+                if let Side::Bottom = side_vert {
+                    standing_on_floor = true;
+                }
                 // Reset y velocity to 0
                 if match side_vert {
                     Side::Top => velocity.y > 0.0,
@@ -132,17 +140,32 @@ impl<'a> System<'a> for ControlPlayerSystem {
                 } {
                     velocity.y = 0.0;
                 }
-                // Jump
-                if let Side::Bottom = side_vert {
-                    if let Some(is_action_down) =
-                        input.action_is_down("player_jump")
-                    {
-                        if is_action_down && !player.is_jump_button_down {
-                            velocity.y += settings.player_jump_strength;
-                        }
-                        player.is_jump_button_down = is_action_down;
+            }
+
+            // Jump
+            if let Some(is_action_down) = input.action_is_down("player_jump") {
+                if standing_on_floor
+                    && is_action_down
+                    && !player.is_jump_button_down
+                {
+                    velocity.y += settings.player_jump_strength;
+                    gravity_opt.as_mut().map(|gravity| {
+                        gravity.x = settings.player_jump_gravity.0;
+                        gravity.y = settings.player_jump_gravity.1;
+                    });
+                } else if !is_action_down {
+                    let decr_jump_strength =
+                        settings.player_jump_strength * 0.25;
+                    if velocity.y > decr_jump_strength {
+                        velocity.y = (velocity.y - decr_jump_strength)
+                            .max(decr_jump_strength);
                     }
+                    gravity_opt.map(|gravity| {
+                        gravity.x = settings.player_gravity.0;
+                        gravity.y = settings.player_gravity.1;
+                    });
                 }
+                player.is_jump_button_down = is_action_down;
             }
         }
     }

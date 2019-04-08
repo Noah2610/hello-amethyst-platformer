@@ -7,5 +7,6 @@ Settings(
   player_max_velocity:   (Some(400.0), None),
   player_decr_velocity:  (2000.0, 1000.0),
   player_gravity:        (0.0,   -750.0),
+  player_jump_gravity:   (0.0,   -400.0),
   player_slide_strength: 50.0,
 )
