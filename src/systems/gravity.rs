@@ -23,9 +23,9 @@ impl<'a> System<'a> for GravitySystem {
                 velocity.x += gravity.x * dt;
                 decr_velocity.as_mut().map(|decr| {
                     if gravity.x > 0.0 {
-                        decr.should_decrease_x_pos = false
+                        decr.should_decrease_x_pos = false;
                     } else if gravity.x < 0.0 {
-                        decr.should_decrease_x_neg = false
+                        decr.should_decrease_x_neg = false;
                     }
                 });
             }
@@ -33,9 +33,9 @@ impl<'a> System<'a> for GravitySystem {
                 velocity.y += gravity.y * dt;
                 decr_velocity.as_mut().map(|decr| {
                     if gravity.y > 0.0 {
-                        decr.should_decrease_y_pos = false
+                        decr.should_decrease_y_pos = false;
                     } else if gravity.y < 0.0 {
-                        decr.should_decrease_y_neg = false
+                        decr.should_decrease_y_neg = false;
                     }
                 });
             }

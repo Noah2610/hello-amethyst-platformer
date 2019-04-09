@@ -2,7 +2,9 @@ use super::component_prelude::*;
 
 #[derive(Debug, Deserialize)]
 pub struct Velocity {
+    #[serde(default)]
     pub x: f32,
+    #[serde(default)]
     pub y: f32,
 }
 

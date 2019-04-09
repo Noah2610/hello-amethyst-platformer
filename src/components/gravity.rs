@@ -1,6 +1,6 @@
 use super::component_prelude::*;
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Gravity {
     pub x: f32,
     pub y: f32,

@@ -115,7 +115,10 @@ pub fn add_component_by_name<'a>(
                 }
             }
             ("Solid", _) => entity = entity.with(solid::Solid),
-            ("Velocity", data) => {
+            ("Velocity", mut data) => {
+                if data.is_empty() {
+                    data = "{}"
+                }
                 if let Ok(deserialized) = serde_json::from_str::<Velocity>(data)
                 {
                     entity = entity.with(deserialized);
