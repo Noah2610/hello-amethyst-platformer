@@ -1,5 +1,4 @@
 (
-  filename: "spritesheet.png",
   spritesheet_width:  32,
   spritesheet_height: 64,
   sprites: [

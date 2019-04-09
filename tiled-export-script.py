@@ -25,7 +25,7 @@ class Tile:
         data = {}
         data["id"] = self.tile().id()
         data["pos"] = self.pos
-        data["ts"] = self.tileset().name()
+        data["ts"] = ".".join(self.tileset().imageSourceString().split("/")[-1].split(".")[0 : -1])
         data["properties"] = properties_of(self.tile())
         return data
 
@@ -62,7 +62,7 @@ class Tileset:
     def ron_data(self):
         tileset = self.tileset
         content = '('
-        content += '\n  filename: "' + self.filename() + '",'
+        # content += '\n  filename: "' + self.filename() + '",'
         content += '\n  spritesheet_width:  ' + str(tileset.imageWidth()) + ','
         content += '\n  spritesheet_height: ' + str(tileset.imageHeight()) + ','
         content += '\n  sprites: ['
@@ -180,7 +180,7 @@ class Export(Plugin):
             print(json.dumps(json_data["tilesets"]), file=file_handle)
 
         for tileset in tilesets:
-            filepath = filepath_base_spritesheet + "/" + tileset.name() + ".ron"
+            filepath = filepath_base_spritesheet + "/" + ".".join(tileset.filename().split(".")[0 : -1]) + ".ron"
             content = tileset.ron_data()
             with open(filepath, "w") as file_handle:
                 print(content, file=file_handle)
@@ -195,7 +195,8 @@ def properties_of(obj):
             properties[key] = []
             vals = regex.sub("", obj.propertyAsString(key)).split(";")
             for val in vals:
-                properties[key].append(val)
+                if val:
+                    properties[key].append(val)
         else:
             val = obj.propertyAsString(key)
             if val == "true":
