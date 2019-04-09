@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use super::system_prelude::*;
 use crate::geo::prelude::*;
 
@@ -10,12 +12,23 @@ impl<'a> System<'a> for MoveEntitiesSystem {
         ReadStorage<'a, Velocity>,
         ReadStorage<'a, Solid>,
         ReadStorage<'a, Size>,
+        ReadStorage<'a, Push>,
+        ReadStorage<'a, Pushable>,
         WriteStorage<'a, Transform>,
     );
 
     fn run(
         &mut self,
-        (entities, time, velocities, solids, sizes, mut transforms): Self::SystemData,
+        (
+            entities,
+            time,
+            velocities,
+            solids,
+            sizes,
+            pushers,
+            pushables,
+            mut transforms,
+        ): Self::SystemData,
     ) {
         let dt = time.delta_seconds();
 
@@ -27,6 +40,8 @@ impl<'a> System<'a> for MoveEntitiesSystem {
             &velocities,
             &solids,
             &sizes,
+            &pushers,
+            &pushables,
             &mut transforms,
         );
     }
@@ -54,25 +69,51 @@ impl<'a> MoveEntitiesSystem {
         velocities: &ReadStorage<'a, Velocity>,
         solids: &ReadStorage<'a, Solid>,
         sizes: &ReadStorage<'a, Size>,
+        pushers: &ReadStorage<'a, Push>,
+        pushables: &ReadStorage<'a, Pushable>,
         transforms: &mut WriteStorage<'a, Transform>,
     ) {
         // Generate CollisionGrid with all solid entities
-        let collision_grid = CollisionGrid::<()>::from(
-            (entities, &*transforms, sizes.maybe(), solids)
+        // The custom generic `bool` represents if it is pushable or not
+        let collision_grid = CollisionGrid::<bool>::from(
+            (
+                entities,
+                &*transforms,
+                sizes.maybe(),
+                pushables.maybe(),
+                solids,
+            )
                 .join()
-                .map(|(entity, transform, size_opt, _)| {
+                .map(|(entity, transform, size_opt, pushable_opt, _)| {
                     let pos = transform.translation();
                     (
                         entity.id(),
                         (pos.x, pos.y),
                         size_opt.map(|size| (size.w, size.h)),
+                        pushable_opt.map(|_| true),
                     )
                 })
-                .collect::<Vec<(Index, (f32, f32), Option<(f32, f32)>)>>(),
+                .collect::<Vec<(
+                    Index,
+                    (f32, f32),
+                    Option<(f32, f32)>,
+                    Option<bool>,
+                )>>(),
         );
+        // This HashMap will be filled with entity IDs (keys) and a vector (values), by
+        // which they must be moved afterwards.
+        let mut translate_pushables = HashMap::new();
 
-        for (entity, velocity, size_opt, transform, _) in
-            (entities, velocities, sizes.maybe(), transforms, solids).join()
+        // Now check for collisions for all solid entities, using the generated CollisionGrid
+        for (entity, velocity, size_opt, transform, pusher_opt, _) in (
+            entities,
+            velocities,
+            sizes.maybe(),
+            &mut *transforms,
+            pushers.maybe(),
+            solids,
+        )
+            .join()
         {
             let entity_id = entity.id();
             Axis::for_each(|axis| {
@@ -91,14 +132,40 @@ impl<'a> MoveEntitiesSystem {
                             entity_id, transform, size_opt, &axis, sign,
                         );
                     // Check for collision in newly calculated position
-                    if collision_grid.collides_any(&collision_rect) {
-                        // New position would be in collision, break out of loop and don't apply
-                        // new position
-                        break;
-                    } else {
+                    let colliding_with =
+                        collision_grid.colliding_with(&collision_rect);
+                    if colliding_with.is_empty() {
                         // New position would NOT be in collision, apply new position
                         transform.set_x(new_position.0);
                         transform.set_y(new_position.1);
+                    } else {
+                        // New position would be in collision, break out of loop and don't apply
+                        // new position, unless this entity is `Push`, and all colliding entities
+                        // are `Pushable`.
+                        if pusher_opt.is_some() {
+                            if colliding_with
+                                .iter()
+                                .all(|rect| rect.custom.unwrap_or(false))
+                            {
+                                // All colliding entities are `Pushable`, therefor push them.
+                                // Afterwards, they will really be pushed (transforms manipulated),
+                                // for now we will only note, that the do need to be translated.
+                                for coll_with in colliding_with {
+                                    let entry = translate_pushables
+                                        .entry(coll_with.id)
+                                        .or_insert((0.0, 0.0));
+                                    match axis {
+                                        Axis::X => entry.0 += sign,
+                                        Axis::Y => entry.1 += sign,
+                                    }
+                                }
+                            } else {
+                                // None of the entities are `Pushable`, so don't apply new position.
+                                break;
+                            }
+                        } else {
+                            break;
+                        }
                     }
                 }
                 // Try to move by the floating point remainder
@@ -108,12 +175,47 @@ impl<'a> MoveEntitiesSystem {
                         entity_id, transform, size_opt, &axis, rem,
                     );
                 // Check for collision in newly calculated position
-                if !collision_grid.collides_any(&collision_rect) {
+                let colliding_with =
+                    collision_grid.colliding_with(&collision_rect);
+                if colliding_with.is_empty() {
                     // New position would NOT be in collision, apply new position
                     transform.set_x(new_position.0);
                     transform.set_y(new_position.1);
+                } else {
+                    // New position would be in collision, check if all collidin entities are pushable.
+                    if pusher_opt.is_some() {
+                        if colliding_with
+                            .iter()
+                            .all(|rect| rect.custom.unwrap_or(false))
+                        {
+                            // All colliding entities are `Pushable`, therefor push them.
+                            // Afterwards, they will really be pushed (transforms manipulated),
+                            // for now we will only note, that the do need to be translated.
+                            for coll_with in colliding_with {
+                                let entry = translate_pushables
+                                    .entry(coll_with.id)
+                                    .or_insert((0.0, 0.0));
+                                match axis {
+                                    Axis::X => entry.0 += sign,
+                                    Axis::Y => entry.1 += sign,
+                                }
+                            }
+                        }
+                    }
                 }
             });
+        } // End join loop
+
+        // Push all pushable entities, which need pushing
+        for (id, (x, y)) in translate_pushables {
+            for (entity, transform, _) in
+                (entities, &mut *transforms, pushables).join()
+            {
+                if entity.id() == id {
+                    transform.translate_x(x);
+                    transform.translate_y(y);
+                }
+            }
         }
     }
 }

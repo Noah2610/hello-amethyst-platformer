@@ -230,6 +230,7 @@ impl Startup {
             .with(Solid)
             .with(Collision::new())
             .with(CheckCollision)
+            .with(Pushable)
             .build();
     }
 }

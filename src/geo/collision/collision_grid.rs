@@ -76,6 +76,20 @@ impl<T> From<Vec<(Index, Vector, Option<Vector>)>> for CollisionGrid<T> {
     }
 }
 
+impl<T> From<Vec<(Index, Vector, Option<Vector>, Option<T>)>>
+    for CollisionGrid<T>
+where
+    T: Clone + Copy,
+{
+    fn from(data: Vec<(Index, Vector, Option<Vector>, Option<T>)>) -> Self {
+        Self::new(
+            data.iter()
+                .map(|&rect_data| CollisionRect::from(rect_data))
+                .collect(),
+        )
+    }
+}
+
 // impl<T> From<Vec<(Index, Vector, Option<Vector>, Option<T>)>>
 //     for CollisionGrid<T>
 // {

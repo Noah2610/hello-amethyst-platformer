@@ -5,6 +5,8 @@ mod gravity;
 mod inner_size;
 mod max_velocity;
 mod player;
+mod push;
+mod pushable;
 mod scale_once;
 mod size;
 mod solid;
@@ -22,6 +24,8 @@ pub mod prelude {
     pub use super::InnerSize;
     pub use super::MaxVelocity;
     pub use super::Player;
+    pub use super::Push;
+    pub use super::Pushable;
     pub use super::ScaleOnce;
     pub use super::Size;
     pub use super::Solid;
@@ -51,6 +55,8 @@ pub use gravity::Gravity;
 pub use inner_size::InnerSize;
 pub use max_velocity::MaxVelocity;
 pub use player::Player;
+pub use push::Push;
+pub use pushable::Pushable;
 pub use scale_once::ScaleOnce;
 pub use size::Size;
 pub use solid::Solid;
@@ -114,6 +120,8 @@ pub fn add_component_by_name<'a>(
                     ))
                 }
             }
+            ("Push", _) => entity = entity.with(push::Push),
+            ("Pushable", _) => entity = entity.with(pushable::Pushable),
             ("Solid", _) => entity = entity.with(solid::Solid),
             ("Velocity", mut data) => {
                 if data.is_empty() {
