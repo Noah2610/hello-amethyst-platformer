@@ -19,27 +19,10 @@ impl Startup {
     }
 
     fn is_finished_loading(&self, data: &StateData<CustomGameData>) -> bool {
-        // Finished loading spritesheet(s)?
-        let spritesheet_asset =
-            data.world.read_resource::<AssetStorage<SpriteSheet>>();
         let spritesheet_handles =
             data.world.read_resource::<SpriteSheetHandles>();
 
-        let has_base_handle =
-            if let Some(base_handle) = &spritesheet_handles.base {
-                spritesheet_asset.get(base_handle).is_some()
-            } else {
-                false
-            };
-        let has_player_handle =
-            if let Some(player_handle) = &spritesheet_handles.player {
-                spritesheet_asset.get(player_handle).is_some()
-            } else {
-                false
-            };
-
-        has_base_handle
-            && has_player_handle
+        spritesheet_handles.has_finished_loading_all(&data.world)
             && self.loaded_map
             && self.loaded_camera
     }
@@ -169,12 +152,8 @@ impl Startup {
                 let sprite_render = {
                     let spritesheet_handle = data
                         .world
-                        .read_resource::<SpriteSheetHandles>()
-                        .base
-                        .clone()
-                        .expect(
-                            "Base SpriteSheet should be loaded at this point",
-                        );
+                        .write_resource::<SpriteSheetHandles>()
+                        .get_or_load("spritesheet_base", &data.world);
                     SpriteRender {
                         sprite_sheet:  spritesheet_handle,
                         sprite_number: id,
@@ -222,10 +201,8 @@ impl Startup {
         let sprite_render = {
             let spritesheet_handle = data
                 .world
-                .read_resource::<SpriteSheetHandles>()
-                .player
-                .clone()
-                .expect("Player SpriteSheet should be loaded at this point");
+                .write_resource::<SpriteSheetHandles>()
+                .get_or_load("spritesheet_player", &data.world);
             SpriteRender {
                 sprite_sheet:  spritesheet_handle,
                 sprite_number: 0,
@@ -260,7 +237,7 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Startup {
         self.initialize_loading_text(&mut data);
 
         // Spritesheet(s)
-        load_spritesheets(&mut data.world);
+        data.world.add_resource(SpriteSheetHandles::default());
         // let spritesheet_handle = load_spritesheet(&mut data.world);
         // data.world.add_resource(spritesheet_handle);
 
@@ -315,43 +292,6 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Startup {
 
         Trans::None
     }
-}
-
-fn load_spritesheets(world: &mut World) {
-    const SPRITESHEET_NAMES: [SpriteSheetName; 2] =
-        [SpriteSheetName::Base, SpriteSheetName::Player];
-
-    let mut handles = SpriteSheetHandles::default();
-
-    for &name in &SPRITESHEET_NAMES {
-        let handle = {
-            let loader = world.read_resource::<Loader>();
-            let texture_handle = {
-                let texture_storage =
-                    world.read_resource::<AssetStorage<Texture>>();
-                loader.load(
-                    name.filepath_png(),
-                    PngFormat,
-                    TextureMetadata::srgb_scale(),
-                    (),
-                    &texture_storage,
-                )
-            };
-            let spritesheet_store =
-                world.read_resource::<AssetStorage<SpriteSheet>>();
-            loader.load(
-                name.filepath_ron(),
-                SpriteSheetFormat,
-                texture_handle,
-                (),
-                &spritesheet_store,
-            )
-        };
-
-        handles.insert(name, handle);
-    }
-
-    world.add_resource(handles);
 }
 
 fn load_settings() -> Settings {
