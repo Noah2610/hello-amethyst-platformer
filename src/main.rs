@@ -1,8 +1,10 @@
 extern crate amethyst;
 extern crate json;
+extern crate regex;
 extern crate ron;
 #[macro_use]
 extern crate serde;
+extern crate serde_json;
 
 mod custom_game_data;
 mod game;

@@ -58,14 +58,77 @@ pub use velocity::Velocity;
 
 use amethyst::ecs::EntityBuilder;
 use amethyst::prelude::Builder;
+use regex::{Match, Regex};
+
 pub fn add_component_by_name<'a>(
     mut entity: EntityBuilder<'a>,
     component_name: &str,
 ) -> EntityBuilder<'a> {
-    match component_name {
-        "Collision" => entity = entity.with(collision::Collision::new()),
-        "Solid" => entity = entity.with(solid::Solid),
-        _ => (),
+    let re = Regex::new(r"(?P<name>\w+)(?P<params>\{.*\})?").unwrap();
+
+    if let Some(capture) = re.captures(component_name) {
+        match (
+            capture.name("name").map(|x| x.as_str()).unwrap_or(""),
+            capture.name("params").map(|x| x.as_str()).unwrap_or(""),
+        ) {
+            ("CheckCollision", _) => {
+                entity = entity.with(check_collision::CheckCollision)
+            }
+            ("Collision", _) => {
+                entity = entity.with(collision::Collision::new())
+            }
+            ("DecreaseVelocity", data) => {
+                if let Ok(deserialized) =
+                    serde_json::from_str::<DecreaseVelocity>(data)
+                {
+                    entity = entity.with(deserialized);
+                } else {
+                    panic!(format!(
+                        "Couldn't deserialize JSON data for \
+                         DecreaseVelocity:\n{:#?}",
+                        data
+                    ))
+                }
+            }
+            ("Gravity", data) => {
+                if let Ok(deserialized) = serde_json::from_str::<Gravity>(data)
+                {
+                    entity = entity.with(deserialized);
+                } else {
+                    panic!(format!(
+                        "Couldn't deserialize JSON data for Gravity:\n{:#?}",
+                        data
+                    ))
+                }
+            }
+            ("MaxVelocity", data) => {
+                if let Ok(deserialized) =
+                    serde_json::from_str::<MaxVelocity>(data)
+                {
+                    entity = entity.with(deserialized);
+                } else {
+                    panic!(format!(
+                        "Couldn't deserialize JSON data for \
+                         MaxVelocity:\n{:#?}",
+                        data
+                    ))
+                }
+            }
+            ("Solid", _) => entity = entity.with(solid::Solid),
+            ("Velocity", data) => {
+                if let Ok(deserialized) = serde_json::from_str::<Velocity>(data)
+                {
+                    entity = entity.with(deserialized);
+                } else {
+                    panic!(format!(
+                        "Couldn't deserialize JSON data for Velocity:\n{:#?}",
+                        data
+                    ))
+                }
+            }
+            _ => (),
+        }
     }
+
     entity
 }

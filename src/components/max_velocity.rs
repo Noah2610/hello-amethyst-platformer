@@ -1,5 +1,6 @@
 use super::component_prelude::*;
 
+#[derive(Deserialize)]
 pub struct MaxVelocity {
     pub x: Option<f32>,
     pub y: Option<f32>,

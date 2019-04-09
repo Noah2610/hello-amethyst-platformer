@@ -5,10 +5,12 @@ authors = ["Noah Rosenzweig <rosenzweig.noah@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-amethyst = "0.10.0"
-json     = "0.11.13"
-ron      = "0.4.2"
-serde    = { version = "1.0.89", features = ["derive"] }
+amethyst   = "0.10.0"
+json       = "0.11.13"
+regex      = "1.1.5"
+ron        = "0.4.2"
+serde      = { version = "1.0.89", features = ["derive"] }
+serde_json = "1.0.39"
 
 [replace]
 "lewton:0.9.4" = { git = "https://github.com/Noah2610/lewton", branch = "custom-0.9.3" } # cross-compilation to windows doesn't work with lewton 0.9.4

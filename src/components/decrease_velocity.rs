@@ -1,5 +1,6 @@
 use super::component_prelude::*;
 
+#[derive(Deserialize)]
 pub struct DecreaseVelocity {
     pub x: f32,
     pub y: f32,
