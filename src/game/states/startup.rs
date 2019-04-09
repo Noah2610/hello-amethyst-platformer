@@ -138,13 +138,19 @@ impl Startup {
 
         // TILES
         for tile_data in json["tiles"].members() {
-            if let (Some(id), (Some(x), Some(y)), component_names) = (
+            if let (
+                Some(id),
+                (Some(x), Some(y)),
+                component_names,
+                Some(tileset_name),
+            ) = (
                 tile_data["id"].as_usize(),
                 (
                     tile_data["pos"]["x"].as_f32(),
                     tile_data["pos"]["y"].as_f32(),
                 ),
                 tile_data["properties"]["components"].members(),
+                tile_data["ts"].as_str(),
             ) {
                 let mut pos = Transform::default();
                 pos.set_xyz(x, y, 0.0);
@@ -153,7 +159,7 @@ impl Startup {
                     let spritesheet_handle = data
                         .world
                         .write_resource::<SpriteSheetHandles>()
-                        .get_or_load("spritesheet_base", &data.world);
+                        .get_or_load(tileset_name, &data.world);
                     SpriteRender {
                         sprite_sheet:  spritesheet_handle,
                         sprite_number: id,

@@ -25,7 +25,7 @@ class Tile:
         data = {}
         data["id"] = self.tile().id()
         data["pos"] = self.pos
-        data["tileset"] = self.tileset().name()
+        data["ts"] = self.tileset().name()
         data["properties"] = properties_of(self.tile())
         return data
 
@@ -137,7 +137,7 @@ class Export(Plugin):
     @classmethod
     def write(self, tile_map, filepath_map):
         filepath_tileset = filepath_map.replace(".json", ".ts.json")
-        filepath_base_spritesheet = filepath_map.replace(".json", "")
+        filepath_base_spritesheet = "/".join(filepath_map.split("/")[0 : -1])
         tiles    = []
         tilesets = []
         objects  = []
@@ -180,7 +180,7 @@ class Export(Plugin):
             print(json.dumps(json_data["tilesets"]), file=file_handle)
 
         for tileset in tilesets:
-            filepath = filepath_base_spritesheet + "_" + tileset.name() + ".spritesheet.ron"
+            filepath = filepath_base_spritesheet + "/" + tileset.name() + ".ron"
             content = tileset.ron_data()
             with open(filepath, "w") as file_handle:
                 print(content, file=file_handle)
