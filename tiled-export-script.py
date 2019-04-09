@@ -3,6 +3,7 @@ Test export script
 """
 
 import json
+import re
 from tiled import *
 
 class Tile:
@@ -196,10 +197,11 @@ class Export(Plugin):
 
 def properties_of(obj):
     properties = {}
+    regex = re.compile(r"\s*")
     for key in obj.properties().keys():
         if key == "components":
             properties[key] = []
-            vals = obj.propertyAsString(key).replace(" ", "").split(",")
+            vals = regex.sub("", obj.propertyAsString(key)).split(";")
             for val in vals:
                 properties[key].append(val)
         else:
