@@ -1,5 +1,5 @@
 """
-Test export script
+hello-amethyst-platformer tiled export script
 """
 
 import json
@@ -78,15 +78,7 @@ class Tileset:
             content += '\n      x:      ' + str(tile_size['w'] * col) + ','
             content += '\n      y:      ' + str(tile_size['h'] * row) + ','
             content += '\n      width:  ' + str(tile_size['w']) + ','
-
-            # NOTE: The first tile is the upper half of the player,
-            #       manually double its height in the spritesheet,
-            #       so the sprite also includes the lower half.
-            if i == 0:
-                content += '\n      height: ' + str(tile_size['h'] * 2) + ','
-            else:
-                content += '\n      height: ' + str(tile_size['h']) + ','
-
+            content += '\n      height: ' + str(tile_size['h']) + ','
             content += '\n    ),'
         content += '\n  ],'
         content += '\n)'
@@ -136,11 +128,11 @@ class Object:
 class Export(Plugin):
     @classmethod
     def nameFilter(self):
-        return "Test export (*.json)"
+        return "hello-amethyst-platformer export script (*.json)"
 
     @classmethod
     def shortName(self):
-        return "test"
+        return "hello-amethyst-platformer"
 
     @classmethod
     def write(self, tile_map, filepath_map):
