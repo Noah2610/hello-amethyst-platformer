@@ -9,12 +9,12 @@ impl<'a> System<'a> for MoveEntitiesSystem {
     type SystemData = (
         Entities<'a>,
         Read<'a, Time>,
-        ReadStorage<'a, Velocity>,
         ReadStorage<'a, Solid>,
         ReadStorage<'a, Size>,
         ReadStorage<'a, Push>,
         ReadStorage<'a, Pushable>,
         WriteStorage<'a, Transform>,
+        WriteStorage<'a, Velocity>,
     );
 
     fn run(
@@ -22,27 +22,32 @@ impl<'a> System<'a> for MoveEntitiesSystem {
         (
             entities,
             time,
-            velocities,
             solids,
             sizes,
             pushers,
             pushables,
             mut transforms,
+            mut velocities,
         ): Self::SystemData,
     ) {
         let dt = time.delta_seconds();
 
-        self.run_without_collision(dt, &velocities, &solids, &mut transforms);
+        self.run_without_collision(
+            dt,
+            &solids,
+            &mut transforms,
+            &mut velocities,
+        );
 
         self.run_with_collision(
             dt,
             &entities,
-            &velocities,
             &solids,
             &sizes,
             &pushers,
             &pushables,
             &mut transforms,
+            &mut velocities,
         );
     }
 }
@@ -51,9 +56,9 @@ impl<'a> MoveEntitiesSystem {
     fn run_without_collision(
         &self,
         dt: f32,
-        velocities: &ReadStorage<'a, Velocity>,
         solids: &ReadStorage<Solid>,
         transforms: &mut WriteStorage<'a, Transform>,
+        velocities: &mut WriteStorage<'a, Velocity>,
     ) {
         for (velocity, transform, _) in (velocities, transforms, !solids).join()
         {
@@ -66,12 +71,12 @@ impl<'a> MoveEntitiesSystem {
         &self,
         dt: f32,
         entities: &Entities<'a>,
-        velocities: &ReadStorage<'a, Velocity>,
         solids: &ReadStorage<'a, Solid>,
         sizes: &ReadStorage<'a, Size>,
         pushers: &ReadStorage<'a, Push>,
         pushables: &ReadStorage<'a, Pushable>,
         transforms: &mut WriteStorage<'a, Transform>,
+        velocities: &mut WriteStorage<'a, Velocity>,
     ) {
         // Generate CollisionGrid with all solid entities
         // The custom generic `bool` represents if it is pushable or not
@@ -107,7 +112,7 @@ impl<'a> MoveEntitiesSystem {
         // Now check for collisions for all solid entities, using the generated CollisionGrid
         for (entity, velocity, size_opt, transform, pusher_opt, _) in (
             entities,
-            velocities,
+            &*velocities,
             sizes.maybe(),
             &mut *transforms,
             pushers.maybe(),
@@ -150,15 +155,19 @@ impl<'a> MoveEntitiesSystem {
                                 // All colliding entities are `Pushable`, therefor push them.
                                 // Afterwards, they will really be pushed (transforms manipulated),
                                 // for now we will only note, that the do need to be translated.
+                                // Also move itself.
                                 for coll_with in colliding_with {
                                     let entry = translate_pushables
                                         .entry(coll_with.id)
                                         .or_insert((0.0, 0.0));
+                                    //*entry = new_position;
                                     match axis {
                                         Axis::X => entry.0 += sign,
                                         Axis::Y => entry.1 += sign,
                                     }
                                 }
+                                transform.set_x(new_position.0);
+                                transform.set_y(new_position.1);
                             } else {
                                 // None of the entities are `Pushable`, so don't apply new position.
                                 break;
@@ -195,11 +204,14 @@ impl<'a> MoveEntitiesSystem {
                                 let entry = translate_pushables
                                     .entry(coll_with.id)
                                     .or_insert((0.0, 0.0));
+                                //*entry = new_position;
                                 match axis {
-                                    Axis::X => entry.0 += sign,
-                                    Axis::Y => entry.1 += sign,
+                                    Axis::X => entry.0 += rem,
+                                    Axis::Y => entry.1 += rem,
                                 }
                             }
+                            transform.set_x(new_position.0);
+                            transform.set_y(new_position.1);
                         }
                     }
                 }
@@ -207,11 +219,25 @@ impl<'a> MoveEntitiesSystem {
         } // End join loop
 
         // Push all pushable entities, which need pushing
+        // Also kill their velocities, if they have one
         for (id, (x, y)) in translate_pushables {
-            for (entity, transform, _) in
-                (entities, &mut *transforms, pushables).join()
+            for (entity, transform, mut velocity_opt, _) in (
+                entities,
+                &mut *transforms,
+                (&mut *velocities).maybe(),
+                pushables,
+            )
+                .join()
             {
                 if entity.id() == id {
+                    velocity_opt.as_mut().map(|velocity| {
+                        if x != 0.0 {
+                            velocity.x = 0.0;
+                        }
+                        if y != 0.0 {
+                            velocity.y = 0.0;
+                        }
+                    });
                     transform.translate_x(x);
                     transform.translate_y(y);
                 }

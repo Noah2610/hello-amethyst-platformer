@@ -1,6 +1,8 @@
 use super::system_prelude::*;
 use crate::geo::prelude::*;
 
+const PADDING: f32 = 1.0;
+
 // NOTE:
 // Consider giving `CollisionSystem` a `CollisionGrid` field, which stores the generated
 // `CollisionGrid` between frames; then only update `CollisionRect`s within the grid, which do not
@@ -32,8 +34,9 @@ impl<'a> System<'a> for CollisionSystem {
                     // Create a CollisionRect with increased size, for touch collision checking
                     let rect = CollisionRect::with_custom(
                         entity_id,
-                        (pos.x - 1.0, pos.y - 1.0),
-                        size_opt.map(|size| (size.w + 1.0, size.h + 1.0)),
+                        (pos.x - PADDING, pos.y - PADDING),
+                        size_opt
+                            .map(|size| (size.w + PADDING, size.h + PADDING)),
                         None,
                     );
                     rect
@@ -110,41 +113,41 @@ fn create_collision_rects_for_sides_from<T>(
     CollisionRectSides {
         inner:  CollisionRect {
             id:     rect.id,
-            top:    rect.top - 1.0,
-            bottom: rect.bottom + 1.0,
-            left:   rect.left + 1.0,
-            right:  rect.right - 1.0,
+            top:    rect.top - PADDING,
+            bottom: rect.bottom + PADDING,
+            left:   rect.left + PADDING,
+            right:  rect.right - PADDING,
             custom: Some(Side::Inner),
         },
         top:    CollisionRect {
             id:     rect.id,
             top:    rect.top,
-            bottom: rect.bottom + 1.0,
-            left:   rect.left + 1.0,
-            right:  rect.right - 1.0,
+            bottom: rect.bottom + PADDING,
+            left:   rect.left + PADDING,
+            right:  rect.right - PADDING,
             custom: Some(Side::Top),
         },
         bottom: CollisionRect {
             id:     rect.id,
-            top:    rect.top - 1.0,
+            top:    rect.top - PADDING,
             bottom: rect.bottom,
-            left:   rect.left + 1.0,
-            right:  rect.right - 1.0,
+            left:   rect.left + PADDING,
+            right:  rect.right - PADDING,
             custom: Some(Side::Bottom),
         },
         left:   CollisionRect {
             id:     rect.id,
-            top:    rect.top - 1.0,
-            bottom: rect.bottom + 1.0,
+            top:    rect.top - PADDING,
+            bottom: rect.bottom + PADDING,
             left:   rect.left,
-            right:  rect.right - 1.0,
+            right:  rect.right - PADDING,
             custom: Some(Side::Left),
         },
         right:  CollisionRect {
             id:     rect.id,
-            top:    rect.top - 1.0,
-            bottom: rect.bottom + 1.0,
-            left:   rect.left + 1.0,
+            top:    rect.top - PADDING,
+            bottom: rect.bottom + PADDING,
+            left:   rect.left + PADDING,
             right:  rect.right,
             custom: Some(Side::Right),
         },
