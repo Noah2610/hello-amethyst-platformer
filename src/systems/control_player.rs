@@ -128,7 +128,7 @@ impl<'a> System<'a> for ControlPlayerSystem {
                 }
                 if touching_vertically_side.is_none() {
                     // Keep (positive/downwards) y velocity at a constant; slide on wall
-                    let slide_strength = -settings.player_slide_strength;
+                    let slide_strength = -settings.player.slide_strength;
                     if velocity.y < slide_strength {
                         velocity.y = slide_strength;
                     }
@@ -140,14 +140,14 @@ impl<'a> System<'a> for ControlPlayerSystem {
                             if velocity.y < 0.0 {
                                 velocity.y = 0.0;
                             }
-                            velocity.y += settings.player_jump_strength;
+                            velocity.y += settings.player.jump_strength;
                             // TODO: Have separate `player_wall_jump_strength` setting
                             match side_hor {
                                 Side::Left => {
-                                    velocity.x += settings.player_jump_strength
+                                    velocity.x += settings.player.jump_strength
                                 }
                                 Side::Right => {
-                                    velocity.x -= settings.player_jump_strength
+                                    velocity.x -= settings.player.jump_strength
                                 }
                                 _ => (),
                             }
@@ -178,21 +178,21 @@ impl<'a> System<'a> for ControlPlayerSystem {
                     && is_jump_down
                     && !player.is_jump_button_down
                 {
-                    velocity.y += settings.player_jump_strength;
+                    velocity.y += settings.player.jump_strength;
                     gravity_opt.as_mut().map(|gravity| {
-                        gravity.x = settings.player_jump_gravity.0;
-                        gravity.y = settings.player_jump_gravity.1;
+                        gravity.x = settings.player.jump_gravity.0;
+                        gravity.y = settings.player.jump_gravity.1;
                     });
                 } else if !is_jump_down {
                     let decr_jump_strength =
-                        settings.player_jump_strength * 0.25;
+                        settings.player.jump_strength * 0.25;
                     if velocity.y > decr_jump_strength {
                         velocity.y = (velocity.y - decr_jump_strength)
                             .max(decr_jump_strength);
                     }
                     gravity_opt.map(|gravity| {
-                        gravity.x = settings.player_gravity.0;
-                        gravity.y = settings.player_gravity.1;
+                        gravity.x = settings.player.gravity.0;
+                        gravity.y = settings.player.gravity.1;
                     });
                 }
                 player.is_jump_button_down = is_jump_down;

@@ -85,8 +85,8 @@ impl Startup {
         transform.set_z(1.0);
 
         let mut camera = Camera::new()
-            .base_speed({ settings.camera_base_speed })
-            .deadzone({ settings.camera_deadzone });
+            .base_speed({ settings.camera.base_speed })
+            .deadzone({ settings.camera.deadzone });
 
         if let Some(player_id) = self.player_id {
             camera = camera.follow(player_id);
@@ -96,14 +96,14 @@ impl Startup {
             .create_entity()
             .with(AmethystCamera::from(Projection::orthographic(
                 0.0,                    // Left
-                settings.camera_size.0, // Right
+                settings.camera.size.0, // Right
                 0.0,                    // Bottom (!)
-                settings.camera_size.1, // Top    (!)
+                settings.camera.size.1, // Top    (!)
             )))
             .with(camera.build())
             .with(transform)
-            .with(Size::from(settings.camera_size))
-            .with(InnerSize(Size::from(settings.camera_inner_size)))
+            .with(Size::from(settings.camera.size))
+            .with(InnerSize(Size::from(settings.camera.inner_size)))
             .with(Velocity::default())
             .with(Collision::new())
             .build();
@@ -233,21 +233,21 @@ impl Startup {
             .create_entity()
             .with(
                 Player::new()
-                    .acceleration(settings.player_acceleration)
-                    .run_acceleration(settings.player_run_acceleration)
-                    .max_velocity(settings.player_max_velocity)
-                    .run_max_velocity(settings.player_run_max_velocity)
+                    .acceleration(settings.player.acceleration)
+                    .run_acceleration(settings.player.run_acceleration)
+                    .max_velocity(settings.player.max_velocity)
+                    .run_max_velocity(settings.player.run_max_velocity)
                     .build(),
             )
             .with(transform)
             .with(sprite_render)
             .with(Transparent)
             .with(Velocity::default())
-            .with(MaxVelocity::from(settings.player_max_velocity))
-            .with(DecreaseVelocity::from(settings.player_decr_velocity))
+            .with(MaxVelocity::from(settings.player.max_velocity))
+            .with(DecreaseVelocity::from(settings.player.decr_velocity))
             .with(size)
             .with(ScaleOnce)
-            .with(Gravity::from(settings.player_gravity))
+            .with(Gravity::from(settings.player.gravity))
             .with(Solid)
             .with(Collision::new())
             .with(CheckCollision)

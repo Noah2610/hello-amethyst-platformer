@@ -1,16 +1,20 @@
 Settings(
-  camera_size:             (1200.0,      800.0),
-  camera_inner_size:       (300.0,       200.0),
-  camera_base_speed:       (250.0,       250.0),
-  camera_deadzone:         (16.0,        16.0),
-  player_size:             (16.0,        32.0),  // This is not used currently. Size is read from map.json
-  player_acceleration:     (1500.0,      0.0),
-  player_run_acceleration: (2000.0,      0.0),
-  player_jump_strength:    600.0,
-  player_max_velocity:     (Some(200.0), None),
-  player_run_max_velocity: (Some(600.0), None),
-  player_decr_velocity:    (2000.0,      1000.0),
-  player_gravity:          (0.0,         -750.0),
-  player_jump_gravity:     (0.0,         -400.0),
-  player_slide_strength:   50.0,
+    camera: (
+        size:             (1200.0,      800.0),
+        inner_size:       (300.0,       200.0),
+        base_speed:       (250.0,       250.0),
+        deadzone:         (16.0,        16.0),
+    ),
+    player: (
+        size:             (16.0,        32.0),  // This is not used currently. Size is read from map.json
+        acceleration:     (1500.0,      0.0),
+        run_acceleration: (2000.0,      0.0),
+        jump_strength:    600.0,
+        max_velocity:     (Some(200.0), None),
+        run_max_velocity: (Some(600.0), None),
+        decr_velocity:    (2000.0,      1000.0),
+        gravity:          (0.0,         -750.0),
+        jump_gravity:     (0.0,         -400.0),
+        slide_strength:   50.0,
+    ),
 )
