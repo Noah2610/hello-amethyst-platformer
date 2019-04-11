@@ -233,7 +233,8 @@ impl Startup {
             .create_entity()
             .with(
                 Player::new()
-                    .speed(settings.player_speed)
+                    .acceleration(settings.player_acceleration)
+                    .run_acceleration(settings.player_run_acceleration)
                     .max_velocity(settings.player_max_velocity)
                     .run_max_velocity(settings.player_run_max_velocity)
                     .build(),

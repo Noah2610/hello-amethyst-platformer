@@ -3,7 +3,8 @@ use deathframe::geo::Vector;
 use super::component_prelude::*;
 
 pub struct Player {
-    pub speed:               Vector,
+    pub acceleration:        Vector,
+    pub run_acceleration:    Vector,
     pub max_velocity:        (Option<f32>, Option<f32>),
     pub run_max_velocity:    (Option<f32>, Option<f32>),
     pub is_jump_button_down: bool,
@@ -15,25 +16,39 @@ impl Player {
         PlayerBuilder::default()
     }
 
-    pub fn with_speed(speed: (f32, f32)) -> Self {
+    pub fn with_acceleration(acceleration: (f32, f32)) -> Self {
         Self {
-            speed,
+            acceleration,
             is_jump_button_down: false,
             is_run_button_down: false,
             ..Self::default()
         }
     }
+
+    pub fn current_acceleration(&self) -> Vector {
+        if self.is_run_button_down {
+            self.run_acceleration
+        } else {
+            self.acceleration
+        }
+    }
 }
 
 pub struct PlayerBuilder {
-    speed:            Option<Vector>,
+    acceleration:     Option<Vector>,
+    run_acceleration: Option<Vector>,
     max_velocity:     Option<(Option<f32>, Option<f32>)>,
     run_max_velocity: Option<(Option<f32>, Option<f32>)>,
 }
 
 impl PlayerBuilder {
-    pub fn speed(mut self, speed: Vector) -> Self {
-        self.speed = Some(speed);
+    pub fn acceleration(mut self, acceleration: Vector) -> Self {
+        self.acceleration = Some(acceleration);
+        self
+    }
+
+    pub fn run_acceleration(mut self, run_acceleration: Vector) -> Self {
+        self.run_acceleration = Some(run_acceleration);
         self
     }
 
@@ -55,11 +70,11 @@ impl PlayerBuilder {
 
     pub fn build(self) -> Player {
         let default = Player::default();
-        let speed = self.speed.unwrap_or(default.speed);
+        let acceleration = self.acceleration.unwrap_or(default.acceleration);
         let run_max_velocity =
             self.run_max_velocity.unwrap_or(default.run_max_velocity);
         Player {
-            speed,
+            acceleration,
             run_max_velocity,
             ..default
         }
@@ -69,7 +84,8 @@ impl PlayerBuilder {
 impl Default for PlayerBuilder {
     fn default() -> Self {
         Self {
-            speed:            None,
+            acceleration:     None,
+            run_acceleration: None,
             max_velocity:     None,
             run_max_velocity: None,
         }
@@ -83,7 +99,8 @@ impl Component for Player {
 impl Default for Player {
     fn default() -> Self {
         Self {
-            speed:               (1500.0, 0.0),
+            acceleration:        (1500.0, 0.0),
+            run_acceleration:    (2000.0, 0.0),
             max_velocity:        (Some(400.0), None),
             run_max_velocity:    (Some(800.0), None),
             is_jump_button_down: false,

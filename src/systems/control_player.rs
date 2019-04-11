@@ -15,7 +15,8 @@ impl ControlPlayerSystem {
         // Move left/right, on X axis
         if let Some(x) = input.axis_value("player_x") {
             if x != 0.0 {
-                velocity.x += (player.speed.0 * dt) * (x as f32).signum();
+                velocity.x += (player.current_acceleration().0 * dt)
+                    * (x as f32).signum();
                 decr_velocity_opt.as_mut().map(|decr| {
                     if x > 0.0 {
                         decr.dont_decrease_x_when_pos();

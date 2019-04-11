@@ -4,8 +4,8 @@ Settings(
   camera_base_speed:       (250.0,       250.0),
   camera_deadzone:         (16.0,        16.0),
   player_size:             (16.0,        32.0),  // This is not used currently. Size is read from map.json
-  player_speed:            (1500.0,      0.0),
-  player_run_speed:        (2000.0,      0.0),
+  player_acceleration:     (1500.0,      0.0),
+  player_run_acceleration: (2000.0,      0.0),
   player_jump_strength:    600.0,
   player_max_velocity:     (Some(200.0), None),
   player_run_max_velocity: (Some(600.0), None),
