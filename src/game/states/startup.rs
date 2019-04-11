@@ -231,7 +231,13 @@ impl Startup {
         let player = data
             .world
             .create_entity()
-            .with(Player::with_speed(settings.player_speed))
+            .with(
+                Player::new()
+                    .speed(settings.player_speed)
+                    .max_velocity(settings.player_max_velocity)
+                    .run_max_velocity(settings.player_run_max_velocity)
+                    .build(),
+            )
             .with(transform)
             .with(sprite_render)
             .with(Transparent)
