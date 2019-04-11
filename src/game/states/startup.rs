@@ -1,9 +1,12 @@
+use amethyst::ecs::world::Index;
+
 use super::super::Ingame;
 use super::state_prelude::*;
 use crate::components::prelude::*;
 use crate::geo::Vector;
 
 pub struct Startup {
+    player_id:      Option<Index>,
     loading_entity: Option<Entity>,
     loaded_map:     bool,
     loaded_camera:  bool,
@@ -12,6 +15,7 @@ pub struct Startup {
 impl Startup {
     pub fn new() -> Self {
         Self {
+            player_id:      None,
             loading_entity: None,
             loaded_map:     false,
             loaded_camera:  false,
@@ -80,14 +84,23 @@ impl Startup {
         let mut transform = Transform::default();
         transform.set_z(1.0);
 
+        let mut camera = Camera::new()
+            .base_speed({ settings.camera_base_speed })
+            .deadzone({ settings.camera_deadzone });
+
+        if let Some(player_id) = self.player_id {
+            camera = camera.follow(player_id);
+        }
+
         world
             .create_entity()
-            .with(Camera::from(Projection::orthographic(
+            .with(AmethystCamera::from(Projection::orthographic(
                 0.0,                    // Left
                 settings.camera_size.0, // Right
                 0.0,                    // Bottom (!)
                 settings.camera_size.1, // Top    (!)
             )))
+            .with(camera.build())
             .with(transform)
             .with(Size::from(settings.camera_size))
             .with(InnerSize(Size::from(settings.camera_inner_size)))
@@ -191,7 +204,7 @@ impl Startup {
     }
 
     fn initialize_player_with(
-        &self,
+        &mut self,
         data: &mut StateData<CustomGameData>,
         pos: Vector,
         size: Vector,
@@ -215,7 +228,8 @@ impl Startup {
             }
         };
 
-        data.world
+        let player = data
+            .world
             .create_entity()
             .with(Player::with_speed(settings.player_speed))
             .with(transform)
@@ -232,6 +246,7 @@ impl Startup {
             .with(CheckCollision)
             .with(Pushable)
             .build();
+        self.player_id = Some(player.id());
     }
 }
 

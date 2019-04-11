@@ -1,3 +1,5 @@
+extern crate deathframe;
+
 extern crate amethyst;
 extern crate json;
 extern crate regex;
@@ -8,13 +10,14 @@ extern crate serde_json;
 
 mod custom_game_data;
 mod game;
-mod geo;
 mod resource_helpers;
 mod settings;
 mod world_helpers;
 
 mod components;
 mod systems;
+
+pub use deathframe::geo;
 
 use amethyst::core::transform::TransformBundle;
 use amethyst::input::InputBundle;

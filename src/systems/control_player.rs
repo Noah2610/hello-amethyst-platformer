@@ -49,9 +49,9 @@ impl<'a> System<'a> for ControlPlayerSystem {
                     velocity.x += (player.speed.0 * dt) * (x as f32).signum();
                     decr_velocity.as_mut().map(|decr| {
                         if x > 0.0 {
-                            decr.should_decrease_x_pos = false
+                            decr.dont_decrease_x_when_pos();
                         } else if x < 0.0 {
-                            decr.should_decrease_x_neg = false
+                            decr.dont_decrease_x_when_neg();
                         }
                     });
                 }

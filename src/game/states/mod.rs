@@ -14,7 +14,7 @@ mod state_prelude {
     pub use amethyst::input::is_close_requested;
     pub use amethyst::prelude::*;
     pub use amethyst::renderer::{
-        Camera,
+        Camera as AmethystCamera,
         PngFormat,
         Projection,
         SpriteRender,
