@@ -7,14 +7,33 @@ impl ControlPlayerSystem {
     fn check_move(
         &self,
         dt: f32,
+        settings: &Settings,
         input: &Read<InputHandler<String, String>>,
         player: &Player,
         velocity: &mut Velocity,
         mut decr_velocity_opt: Option<&mut DecreaseVelocity>,
     ) {
+        use crate::settings::SettingsPlayerQuickTurnaround as QTA;
+
         // Move left/right, on X axis
         if let Some(x) = input.axis_value("player_x") {
+            let x = x as f32;
             if x != 0.0 {
+                let turned_around = x.signum() != velocity.x.signum();
+                if turned_around {
+                    // Quick turnaround, when in air
+                    let qta_setting = if player.is_in_air {
+                        settings.player.air_quick_turnaround
+                    // Quick turnaround, when on ground
+                    } else {
+                        settings.player.quick_turnaround
+                    };
+                    match qta_setting {
+                        QTA::ResetVelocity => velocity.x = 0.0,
+                        QTA::InvertVelocity => velocity.x *= -1.0,
+                        _ => (),
+                    }
+                }
                 velocity.x += (player.current_acceleration().0 * dt)
                     * (x as f32).signum();
                 decr_velocity_opt.as_mut().map(|decr| {
@@ -78,14 +97,6 @@ impl<'a> System<'a> for ControlPlayerSystem {
         )
             .join()
         {
-            self.check_move(
-                dt,
-                &input,
-                &player,
-                &mut velocity,
-                decr_velocity_opt,
-            );
-
             // TODO: Refactor the rest of this into their own methods.
             // Is standing on solid? Is touching a solid (horizontally)?
             let mut touching_vertically_side = None;
@@ -157,10 +168,11 @@ impl<'a> System<'a> for ControlPlayerSystem {
                 }
             }
 
-            let mut standing_on_floor = false;
+            player.is_in_air = true;
             if let Some(side_vert) = touching_vertically_side {
                 if let Side::Bottom = side_vert {
-                    standing_on_floor = true;
+                    // Standing on ground
+                    player.is_in_air = false;
                 }
                 // Reset y velocity to 0
                 if match side_vert {
@@ -172,9 +184,19 @@ impl<'a> System<'a> for ControlPlayerSystem {
                 }
             }
 
+            // Move left/right
+            self.check_move(
+                dt,
+                &settings,
+                &input,
+                &player,
+                &mut velocity,
+                decr_velocity_opt,
+            );
+
             // Jump
             if let Some(is_jump_down) = input.action_is_down("player_jump") {
-                if standing_on_floor
+                if !player.is_in_air
                     && is_jump_down
                     && !player.is_jump_button_down
                 {

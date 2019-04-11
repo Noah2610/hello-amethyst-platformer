@@ -9,6 +9,7 @@ pub struct Player {
     pub run_max_velocity:    (Option<f32>, Option<f32>),
     pub is_jump_button_down: bool,
     pub is_run_button_down:  bool,
+    pub is_in_air:           bool,
 }
 
 impl Player {
@@ -105,6 +106,7 @@ impl Default for Player {
             run_max_velocity:    (Some(800.0), None),
             is_jump_button_down: false,
             is_run_button_down:  false,
+            is_in_air:           false,
         }
     }
 }
