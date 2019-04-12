@@ -198,10 +198,12 @@ impl<'a> System<'a> for ControlPlayerSystem {
 
             // Jump
             if let Some(is_jump_down) = input.action_is_down("player_jump") {
-                if (player.on_ground() || !player.has_double_jumped)
-                    && is_jump_down
-                    && !player.is_jump_button_down
-                {
+                let should_jump = (player.on_ground()  // Is standing on ground
+                    || (settings.player.is_double_jump_enabled  // Or has double jump available
+                        && !player.has_double_jumped))
+                    && is_jump_down  // And jump button is currently down
+                    && !player.is_jump_button_down; // And jump button has not already been down
+                if should_jump {
                     player.has_double_jumped = player.in_air();
                     if velocity.y < 0.0 {
                         velocity.y = 0.0;

@@ -65,5 +65,8 @@ Settings(
 
         /// Turning around behavior when in mid air.
         air_quick_turnaround: 0,
+
+        /// If double jumping is enabled. `true` or `false`;
+        is_double_jump_enabled: true,
     ),
 )

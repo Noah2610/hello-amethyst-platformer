@@ -24,18 +24,19 @@ pub struct SettingsCamera {
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct SettingsPlayer {
-    pub size:                 Vector,
-    pub acceleration:         Vector,
-    pub run_acceleration:     Vector,
-    pub jump_strength:        f32,
-    pub max_velocity:         (Option<f32>, Option<f32>),
-    pub run_max_velocity:     (Option<f32>, Option<f32>),
-    pub decr_velocity:        Vector,
-    pub gravity:              Vector,
-    pub jump_gravity:         Vector,
-    pub slide_strength:       f32,
-    pub quick_turnaround:     SettingsPlayerQuickTurnaround,
-    pub air_quick_turnaround: SettingsPlayerQuickTurnaround,
+    pub size:                   Vector,
+    pub acceleration:           Vector,
+    pub run_acceleration:       Vector,
+    pub jump_strength:          f32,
+    pub max_velocity:           (Option<f32>, Option<f32>),
+    pub run_max_velocity:       (Option<f32>, Option<f32>),
+    pub decr_velocity:          Vector,
+    pub gravity:                Vector,
+    pub jump_gravity:           Vector,
+    pub slide_strength:         f32,
+    pub quick_turnaround:       SettingsPlayerQuickTurnaround,
+    pub air_quick_turnaround:   SettingsPlayerQuickTurnaround,
+    pub is_double_jump_enabled: bool,
 }
 
 #[derive(Debug, Clone, Copy)]
