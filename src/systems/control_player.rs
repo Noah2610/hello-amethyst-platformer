@@ -4,7 +4,129 @@ use crate::geo::Side;
 pub struct ControlPlayerSystem;
 
 impl ControlPlayerSystem {
-    fn check_move(
+    /// Returns a tuple with two options:
+    /// `(Option<Side>, Option<Side>)`
+    /// representing if their is a solid collision on the x axis (horizontally, left/right)
+    /// or on the y axis (vertically, top/bottom), and which side is in collision there.
+    fn is_touching_solids_on_sides_horizontally_or_vertically<'a>(
+        &self,
+        entities: &Entities,
+        collision: &Collision,
+        collisions: &ReadStorage<'a, Collision>,
+        solids: &ReadStorage<'a, Solid>,
+    ) -> (Option<Side>, Option<Side>) {
+        let mut touching_horizontally_side = None;
+        let mut touching_vertically_side = None;
+        if collision.in_collision() {
+            for (other_entity, _, _) in (entities, collisions, solids).join() {
+                if let Some(colliding_with) =
+                    collision.collision_with(other_entity.id())
+                {
+                    match colliding_with.side {
+                        Side::Top | Side::Bottom => {
+                            touching_vertically_side = Some(colliding_with.side)
+                        }
+                        Side::Left | Side::Right => {
+                            touching_horizontally_side =
+                                Some(colliding_with.side)
+                        }
+                        _ => (),
+                    }
+                    if touching_vertically_side.is_some()
+                        && touching_horizontally_side.is_some()
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+        (touching_horizontally_side, touching_vertically_side)
+    }
+
+    /// Handle some stuff to do with clinging to a wall (slow slide, wall jump, etc.)
+    fn handle_wall_cling(
+        &self,
+        settings: &Settings,
+        input: &Read<InputHandler<String, String>>,
+        player: &mut Player,
+        velocity: &mut Velocity,
+        (touching_horizontally_side, touching_vertically_side): (
+            Option<Side>,
+            Option<Side>,
+        ),
+    ) {
+        player.is_on_wall = false;
+        if let Some(side_hor) = touching_horizontally_side {
+            // Reset x velocity to 0
+            if match side_hor {
+                Side::Left => velocity.x < 0.0,
+                Side::Right => velocity.x > 0.0,
+                _ => false,
+            } {
+                velocity.x = 0.0;
+            }
+            if touching_vertically_side.is_none() {
+                player.is_on_wall = true;
+                // Keep (positive/downwards) y velocity at a constant; slide on wall
+                let slide_strength = -settings.player.slide_strength;
+                if velocity.y < slide_strength {
+                    velocity.y = slide_strength;
+                }
+                // Wall Jump
+                if let Some(is_action_down) =
+                    input.action_is_down("player_jump")
+                {
+                    if is_action_down && !player.is_jump_button_down {
+                        if velocity.y < 0.0 {
+                            velocity.y = 0.0;
+                        }
+                        velocity.y += settings.player.jump_strength;
+                        // TODO: Have separate `player_wall_jump_strength` setting
+                        match side_hor {
+                            Side::Left => {
+                                velocity.x += settings.player.jump_strength
+                            }
+                            Side::Right => {
+                                velocity.x -= settings.player.jump_strength
+                            }
+                            _ => (),
+                        }
+                    }
+                    player.is_jump_button_down = is_action_down;
+                }
+            }
+        }
+    }
+
+    /// Handle some specifics when player is standing on solid ground vs when they are in air.
+    fn handle_on_ground_and_in_air(
+        &self,
+        player: &mut Player,
+        velocity: &mut Velocity,
+        (_touching_horizontally_side, touching_vertically_side): (
+            Option<Side>,
+            Option<Side>,
+        ),
+    ) {
+        player.is_in_air = true;
+        if let Some(side_vert) = touching_vertically_side {
+            if let Side::Bottom = side_vert {
+                // Standing on ground
+                player.is_in_air = false;
+            }
+            // Reset y velocity to 0
+            if match side_vert {
+                Side::Top => velocity.y > 0.0,
+                Side::Bottom => velocity.y < 0.0,
+                _ => false,
+            } {
+                velocity.y = 0.0;
+            }
+        }
+    }
+
+    /// Move player left/right, if necessary
+    fn handle_move(
         &self,
         dt: f32,
         settings: &Settings,
@@ -46,6 +168,74 @@ impl ControlPlayerSystem {
             }
         }
     }
+
+    /// Handle player jumping. Regular and double jumps.
+    fn handle_jump(
+        &self,
+        settings: &Settings,
+        input: &InputHandler<String, String>,
+        player: &mut Player,
+        velocity: &mut Velocity,
+        gravity_opt: &mut Option<&mut Gravity>,
+    ) {
+        if let Some(is_jump_down) = input.action_is_down("player_jump") {
+            let should_jump = (player.on_ground()  // Is standing on ground
+                    || (settings.player.is_double_jump_enabled  // Or has double jump available
+                        && !player.has_double_jumped))
+                    && is_jump_down  // And jump button is currently down
+                    && !player.is_jump_button_down; // And jump button has not already been down
+            if should_jump {
+                player.has_double_jumped = player.in_air();
+                if velocity.y < 0.0 {
+                    velocity.y = 0.0;
+                }
+                velocity.y += settings.player.jump_strength;
+                gravity_opt.as_mut().map(|gravity| {
+                    gravity.x = settings.player.jump_gravity.0;
+                    gravity.y = settings.player.jump_gravity.1;
+                });
+            } else if !is_jump_down {
+                let decr_jump_strength = settings.player.jump_strength * 0.25;
+                if velocity.y > decr_jump_strength {
+                    velocity.y = (velocity.y - decr_jump_strength)
+                        .max(decr_jump_strength);
+                }
+                gravity_opt.as_mut().map(|gravity| {
+                    gravity.x = settings.player.gravity.0;
+                    gravity.y = settings.player.gravity.1;
+                });
+            }
+            player.is_jump_button_down = is_jump_down;
+        }
+
+        if player.on_ground() || player.on_wall() {
+            player.has_double_jumped = false;
+        }
+    }
+
+    /// Handle running.
+    /// Increase max velocity when holding down run button.
+    fn handle_run(
+        &self,
+        input: &InputHandler<String, String>,
+        player: &mut Player,
+        max_velocity_opt: &mut Option<&mut MaxVelocity>,
+    ) {
+        if let Some(is_run_down) = input.action_is_down("player_run") {
+            max_velocity_opt.as_mut().map(|max_vel| {
+                if is_run_down && !player.is_run_button_down {
+                    // Start running
+                    max_vel.x = player.run_max_velocity.0;
+                    max_vel.y = player.run_max_velocity.1;
+                } else if !is_run_down && player.is_run_button_down {
+                    // Stop running
+                    max_vel.x = player.max_velocity.0;
+                    max_vel.y = player.max_velocity.1;
+                }
+            });
+            player.is_run_button_down = is_run_down;
+        }
+    }
 }
 
 impl<'a> System<'a> for ControlPlayerSystem {
@@ -81,7 +271,7 @@ impl<'a> System<'a> for ControlPlayerSystem {
     ) {
         let dt = time.delta_seconds();
         for (
-            player,
+            mut player,
             mut velocity,
             mut max_velocity_opt,
             decr_velocity_opt,
@@ -97,97 +287,35 @@ impl<'a> System<'a> for ControlPlayerSystem {
         )
             .join()
         {
-            // TODO: Refactor the rest of this into their own methods.
-            // Is standing on solid? Is touching a solid (horizontally)?
-            let mut touching_vertically_side = None;
-            let mut touching_horizontally_side = None;
-            if collision.in_collision() {
-                for (other_entity, _, _) in
-                    (&entities, &collisions, &solids).join()
-                {
-                    if let Some(colliding_with) =
-                        collision.collision_with(other_entity.id())
-                    {
-                        match colliding_with.side {
-                            Side::Top | Side::Bottom => {
-                                touching_vertically_side =
-                                    Some(colliding_with.side)
-                            }
-                            Side::Left | Side::Right => {
-                                touching_horizontally_side =
-                                    Some(colliding_with.side)
-                            }
-                            _ => (),
-                        }
-                        if touching_vertically_side.is_some()
-                            && touching_horizontally_side.is_some()
-                        {
-                            break;
-                        }
-                    }
-                }
-            }
+            // Check if the player is touching solids, and on which sides.
+            let (touching_horizontally_side, touching_vertically_side) = self
+                .is_touching_solids_on_sides_horizontally_or_vertically(
+                    &entities,
+                    &collision,
+                    &collisions,
+                    &solids,
+                );
 
-            player.is_on_wall = false;
-            if let Some(side_hor) = touching_horizontally_side {
-                // Reset x velocity to 0
-                if match side_hor {
-                    Side::Left => velocity.x < 0.0,
-                    Side::Right => velocity.x > 0.0,
-                    _ => false,
-                } {
-                    velocity.x = 0.0;
-                }
-                if touching_vertically_side.is_none() {
-                    player.is_on_wall = true;
-                    // Keep (positive/downwards) y velocity at a constant; slide on wall
-                    let slide_strength = -settings.player.slide_strength;
-                    if velocity.y < slide_strength {
-                        velocity.y = slide_strength;
-                    }
-                    // Wall Jump
-                    if let Some(is_action_down) =
-                        input.action_is_down("player_jump")
-                    {
-                        if is_action_down && !player.is_jump_button_down {
-                            if velocity.y < 0.0 {
-                                velocity.y = 0.0;
-                            }
-                            velocity.y += settings.player.jump_strength;
-                            // TODO: Have separate `player_wall_jump_strength` setting
-                            match side_hor {
-                                Side::Left => {
-                                    velocity.x += settings.player.jump_strength
-                                }
-                                Side::Right => {
-                                    velocity.x -= settings.player.jump_strength
-                                }
-                                _ => (),
-                            }
-                        }
-                        player.is_jump_button_down = is_action_down;
-                    }
-                }
-            }
+            // Handle everything to do with wall clinging
+            // (constant velocity (for slow slide), wall jump, etc.)
+            self.handle_wall_cling(
+                &settings,
+                &input,
+                &mut player,
+                &mut velocity,
+                (touching_horizontally_side, touching_vertically_side),
+            );
 
-            player.is_in_air = true;
-            if let Some(side_vert) = touching_vertically_side {
-                if let Side::Bottom = side_vert {
-                    // Standing on ground
-                    player.is_in_air = false;
-                }
-                // Reset y velocity to 0
-                if match side_vert {
-                    Side::Top => velocity.y > 0.0,
-                    Side::Bottom => velocity.y < 0.0,
-                    _ => false,
-                } {
-                    velocity.y = 0.0;
-                }
-            }
+            // Handle some specifics for when player is on a solid ground vs when they are in air.
+            // (Resetting y velocity when on ground, etc.)
+            self.handle_on_ground_and_in_air(
+                &mut player,
+                &mut velocity,
+                (touching_horizontally_side, touching_vertically_side),
+            );
 
             // Move left/right
-            self.check_move(
+            self.handle_move(
                 dt,
                 &settings,
                 &input,
@@ -196,57 +324,17 @@ impl<'a> System<'a> for ControlPlayerSystem {
                 decr_velocity_opt,
             );
 
-            // Jump
-            if let Some(is_jump_down) = input.action_is_down("player_jump") {
-                let should_jump = (player.on_ground()  // Is standing on ground
-                    || (settings.player.is_double_jump_enabled  // Or has double jump available
-                        && !player.has_double_jumped))
-                    && is_jump_down  // And jump button is currently down
-                    && !player.is_jump_button_down; // And jump button has not already been down
-                if should_jump {
-                    player.has_double_jumped = player.in_air();
-                    if velocity.y < 0.0 {
-                        velocity.y = 0.0;
-                    }
-                    velocity.y += settings.player.jump_strength;
-                    gravity_opt.as_mut().map(|gravity| {
-                        gravity.x = settings.player.jump_gravity.0;
-                        gravity.y = settings.player.jump_gravity.1;
-                    });
-                } else if !is_jump_down {
-                    let decr_jump_strength =
-                        settings.player.jump_strength * 0.25;
-                    if velocity.y > decr_jump_strength {
-                        velocity.y = (velocity.y - decr_jump_strength)
-                            .max(decr_jump_strength);
-                    }
-                    gravity_opt.map(|gravity| {
-                        gravity.x = settings.player.gravity.0;
-                        gravity.y = settings.player.gravity.1;
-                    });
-                }
-                player.is_jump_button_down = is_jump_down;
-            }
+            // Regular and wall jumping
+            self.handle_jump(
+                &settings,
+                &input,
+                &mut player,
+                &mut velocity,
+                &mut gravity_opt,
+            );
 
-            if player.on_ground() || player.on_wall() {
-                player.has_double_jumped = false;
-            }
-
-            // Run
-            if let Some(is_run_down) = input.action_is_down("player_run") {
-                max_velocity_opt.as_mut().map(|max_vel| {
-                    if is_run_down && !player.is_run_button_down {
-                        // Start running
-                        max_vel.x = player.run_max_velocity.0;
-                        max_vel.y = player.run_max_velocity.1;
-                    } else if !is_run_down && player.is_run_button_down {
-                        // Stop running
-                        max_vel.x = player.max_velocity.0;
-                        max_vel.y = player.max_velocity.1;
-                    }
-                });
-                player.is_run_button_down = is_run_down;
-            }
+            // Running
+            self.handle_run(&input, &mut player, &mut max_velocity_opt);
         }
     }
 }
