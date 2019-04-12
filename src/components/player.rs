@@ -10,6 +10,8 @@ pub struct Player {
     pub is_jump_button_down: bool,
     pub is_run_button_down:  bool,
     pub is_in_air:           bool,
+    pub is_on_wall:          bool,
+    pub has_double_jumped:   bool,
 }
 
 impl Player {
@@ -32,6 +34,18 @@ impl Player {
         } else {
             self.acceleration
         }
+    }
+
+    pub fn on_ground(&self) -> bool {
+        !self.is_in_air
+    }
+
+    pub fn in_air(&self) -> bool {
+        self.is_in_air
+    }
+
+    pub fn on_wall(&self) -> bool {
+        self.is_on_wall
     }
 }
 
@@ -107,6 +121,8 @@ impl Default for Player {
             is_jump_button_down: false,
             is_run_button_down:  false,
             is_in_air:           false,
+            is_on_wall:          false,
+            has_double_jumped:   false,
         }
     }
 }

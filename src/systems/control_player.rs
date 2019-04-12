@@ -21,12 +21,12 @@ impl ControlPlayerSystem {
             if x != 0.0 {
                 let turned_around = x.signum() != velocity.x.signum();
                 if turned_around {
-                    // Quick turnaround, when in air
-                    let qta_setting = if player.is_in_air {
-                        settings.player.air_quick_turnaround
                     // Quick turnaround, when on ground
-                    } else {
+                    let qta_setting = if player.on_ground() {
                         settings.player.quick_turnaround
+                    // Quick turnaround, when in air
+                    } else {
+                        settings.player.air_quick_turnaround
                     };
                     match qta_setting {
                         QTA::ResetVelocity => velocity.x = 0.0,
@@ -128,6 +128,7 @@ impl<'a> System<'a> for ControlPlayerSystem {
                 }
             }
 
+            player.is_on_wall = false;
             if let Some(side_hor) = touching_horizontally_side {
                 // Reset x velocity to 0
                 if match side_hor {
@@ -138,6 +139,7 @@ impl<'a> System<'a> for ControlPlayerSystem {
                     velocity.x = 0.0;
                 }
                 if touching_vertically_side.is_none() {
+                    player.is_on_wall = true;
                     // Keep (positive/downwards) y velocity at a constant; slide on wall
                     let slide_strength = -settings.player.slide_strength;
                     if velocity.y < slide_strength {
@@ -196,10 +198,14 @@ impl<'a> System<'a> for ControlPlayerSystem {
 
             // Jump
             if let Some(is_jump_down) = input.action_is_down("player_jump") {
-                if !player.is_in_air
+                if (player.on_ground() || !player.has_double_jumped)
                     && is_jump_down
                     && !player.is_jump_button_down
                 {
+                    player.has_double_jumped = player.in_air();
+                    if velocity.y < 0.0 {
+                        velocity.y = 0.0;
+                    }
                     velocity.y += settings.player.jump_strength;
                     gravity_opt.as_mut().map(|gravity| {
                         gravity.x = settings.player.jump_gravity.0;
@@ -218,6 +224,10 @@ impl<'a> System<'a> for ControlPlayerSystem {
                     });
                 }
                 player.is_jump_button_down = is_jump_down;
+            }
+
+            if player.on_ground() || player.on_wall() {
+                player.has_double_jumped = false;
             }
 
             // Run
