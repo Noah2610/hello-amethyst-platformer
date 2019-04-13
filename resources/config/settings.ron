@@ -61,7 +61,7 @@ Settings(
         /// - `2` (_will hopefully be `InvertVelocity` in the future_)
         ///   When turning around, the velocity's sign is instantly inverted (`velocity.x * -1.0`),
         ///   which means, that no speed is lost when turning around.
-        quick_turnaround: 1,
+        quick_turnaround: 0,
 
         /// Turning around behavior when in mid air.
         air_quick_turnaround: 0,

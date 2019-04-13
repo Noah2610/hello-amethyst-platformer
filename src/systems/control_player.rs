@@ -43,6 +43,23 @@ impl ControlPlayerSystem {
         (touching_horizontally_side, touching_vertically_side)
     }
 
+    fn handle_jump_recharge<'a>(
+        &self,
+        entities: &Entities<'a>,
+        player: &mut Player,
+        collision: &Collision,
+        collisions: &ReadStorage<'a, Collision>,
+        jump_recharges: &ReadStorage<'a, JumpRecharge>,
+    ) {
+        for (entity, _) in (entities, jump_recharges).join() {
+            if let Some(coll_data) = collision.collision_with(entity.id()) {
+                if coll_data.side.is_inner() && coll_data.state.is_entering() {
+                    player.has_double_jumped = false;
+                }
+            }
+        }
+    }
+
     /// Handle some stuff to do with clinging to a wall (slow slide, wall jump, etc.)
     fn handle_wall_cling(
         &self,
@@ -246,6 +263,7 @@ impl<'a> System<'a> for ControlPlayerSystem {
         Read<'a, InputHandler<String, String>>,
         ReadStorage<'a, Collision>,
         ReadStorage<'a, Solid>,
+        ReadStorage<'a, JumpRecharge>,
         WriteStorage<'a, Player>,
         WriteStorage<'a, Velocity>,
         WriteStorage<'a, MaxVelocity>,
@@ -262,6 +280,7 @@ impl<'a> System<'a> for ControlPlayerSystem {
             input,
             collisions,
             solids,
+            jump_recharges,
             mut players,
             mut velocities,
             mut max_velocities,
@@ -295,6 +314,15 @@ impl<'a> System<'a> for ControlPlayerSystem {
                     &collisions,
                     &solids,
                 );
+
+            // Check if the player has collided with a JumpRecharge entity.
+            self.handle_jump_recharge(
+                &entities,
+                &mut player,
+                &collision,
+                &collisions,
+                &jump_recharges,
+            );
 
             // Handle everything to do with wall clinging
             // (constant velocity (for slow slide), wall jump, etc.)

@@ -188,11 +188,16 @@ impl Startup {
                     .with(sprite_render);
 
                 for component_name in component_names {
-                    entity = components::add_component_by_name(
+                    let component_name_str = component_name
+                        .as_str()
+                        .expect("Could not parse string JSON");
+                    entity = components::add_component_to_entity_by_name(
                         entity,
-                        component_name
-                            .as_str()
-                            .expect("Could not parse string JSON"),
+                        component_name_str,
+                    );
+                    entity = components::add_component_to_entity_by_name_custom(
+                        entity,
+                        component_name_str,
                     );
                 }
 
