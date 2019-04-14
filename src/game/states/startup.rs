@@ -1,4 +1,5 @@
 use amethyst::ecs::world::Index;
+use json::JsonValue;
 
 use super::super::Ingame;
 use super::state_prelude::*;
@@ -127,9 +128,16 @@ impl Startup {
 
         const TILE_SIZE: (f32, f32) = (32.0, 32.0); // TODO: Read this data from tileset JSON file
 
+        let mut camera_datas = Vec::new();
+
         // OBJECTS
         for object_data in json["objects"].members() {
-            if let (Some(obj_type), (Some(x), Some(y)), (Some(w), Some(h))) = (
+            if let (
+                Some(obj_type),
+                (Some(x), Some(y)),
+                (Some(w), Some(h)),
+                properties,
+            ) = (
                 object_data["type"].as_str(),
                 (
                     object_data["pos"]["x"].as_f32(),
@@ -139,14 +147,28 @@ impl Startup {
                     object_data["size"]["w"].as_f32(),
                     object_data["size"]["h"].as_f32(),
                 ),
+                &object_data["properties"],
             ) {
                 match obj_type {
                     "Player" => {
                         self.initialize_player_with(data, (x, y), (w, h))
                     }
+                    "Parallax" => {
+                        camera_datas.push(((x, y), (w, h), properties))
+                    }
                     _ => (),
                 }
             }
+        }
+
+        // Camera Object - player should have been loaded at this point
+        for camera_data in camera_datas {
+            self.initialize_parallax_with(
+                data,
+                camera_data.0,
+                camera_data.1,
+                camera_data.2,
+            )
         }
 
         // TILES
@@ -259,6 +281,61 @@ impl Startup {
             .with(Pushable)
             .build();
         self.player_id = Some(player.id());
+    }
+
+    fn initialize_parallax_with(
+        &self,
+        data: &mut StateData<CustomGameData>,
+        pos: Vector,
+        size: Vector,
+        properties: &JsonValue,
+    ) {
+        let bg_dir = resource("textures/bg");
+
+        let settings = data.world.settings();
+        if let Some(player_id) = self.player_id {
+            // TODO: Load bg image textures
+            //for (key, val) in properties.entries() {
+            //    if key == "image" {
+            //        let filepath = format!(
+            //            "{}/{}",
+            //            bg_dir,
+            //            val.as_str().expect("Couldn't parse value as str")
+            //        );
+            //        let loader = data.world.read_resource::<Loader>();
+            //        let texture_handle = {
+            //            let texture_storage =
+            //                data.world.read_resource::<AssetStorage<Texture>>();
+            //            loader.load(
+            //                filepath,
+            //                PngFormat,
+            //                TextureMetadata::srgb_scale(),
+            //                (),
+            //                &texture_storage,
+            //            );
+            //        };
+            //    }
+            //}
+
+            let err_msg = format!("Couldn't parse value as f32");
+            let mut entity = data.world.create_entity();
+            let mut camera = Camera::new().follow(player_id);
+            for (key, val) in properties.entries() {
+                match key {
+                    "base_speed" => {
+                        camera = camera.base_speed((
+                            val.as_f32().expect(&err_msg),
+                            val.as_f32().expect(&err_msg),
+                        ))
+                    }
+                    "image" => {}
+                    // TODO: Add other Camera fields
+                    _ => (),
+                }
+            }
+            entity = entity.with(camera.build());
+            entity.build();
+        }
     }
 }
 

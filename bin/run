@@ -14,4 +14,5 @@ function check {
 }
 
 check "cargo" && \
-  cargo +nightly-2019-03-01 $cmd --features amethyst/nightly
+  cargo $cmd
+  #cargo +nightly-2019-03-01 $cmd --features amethyst/nightly
