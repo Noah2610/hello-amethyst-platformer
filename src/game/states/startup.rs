@@ -296,46 +296,58 @@ impl Startup {
         let bg_dir = resource("textures/bg");
 
         let settings = data.world.settings();
+
         if let Some(player_id) = self.player_id {
-            // TODO: Load bg image textures
-            //for (key, val) in properties.entries() {
-            //    if key == "image" {
-            //        let filepath = format!(
-            //            "{}/{}",
-            //            bg_dir,
-            //            val.as_str().expect("Couldn't parse value as str")
-            //        );
-            //        let loader = data.world.read_resource::<Loader>();
-            //        let texture_handle = {
-            //            let texture_storage =
-            //                data.world.read_resource::<AssetStorage<Texture>>();
-            //            loader.load(
-            //                filepath,
-            //                PngFormat,
-            //                TextureMetadata::srgb_scale(),
-            //                (),
-            //                &texture_storage,
-            //            );
-            //        };
-            //    }
-            //}
+            // Load bg image texture
+            let texture_handle_opt = if let Some((_, bg_filename)) =
+                properties.entries().find(|(key, _)| key == &"image")
+            {
+                let mut texture_handles =
+                    data.world.write_resource::<TextureHandles>();
+                let filepath = format!(
+                    "{}/{}",
+                    bg_dir,
+                    bg_filename.as_str().expect(
+                        "Couldn't parse background image filename as str"
+                    )
+                );
+                Some(texture_handles.get_or_load(filepath, data.world))
+            } else {
+                None
+            };
 
             let err_msg = format!("Couldn't parse value as f32");
+
+            // Create entity
             let mut entity = data.world.create_entity();
             let mut camera = Camera::new().follow(player_id);
+
             for (key, val) in properties.entries() {
-                match key {
-                    "base_speed" => {
+                match (key, &texture_handle_opt) {
+                    ("base_speed", _) => {
                         camera = camera.base_speed((
                             val.as_f32().expect(&err_msg),
                             val.as_f32().expect(&err_msg),
                         ))
                     }
-                    "image" => {}
+                    ("image", Some(texture_handle)) => {
+                        entity = entity.with(texture_handle.clone())
+                    }
                     // TODO: Add other Camera fields
                     _ => (),
                 }
             }
+
+            // Add transform and size to entity
+            let mut transform = Transform::default();
+            // transform.set_xyz(pos.0, pos.1, 0.0);
+            transform.set_z(0.0);
+            entity = entity
+                .with(transform)
+                .with(Size::from(size))
+                .with(Velocity::default())
+                .with(ScaleOnce);
+
             entity = entity.with(camera.build());
             entity.build();
         }
@@ -350,10 +362,9 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Startup {
         // Loading font
         self.initialize_loading_text(&mut data);
 
-        // Spritesheet(s)
+        // Spritesheets and Textures
         data.world.add_resource(SpriteSheetHandles::default());
-        // let spritesheet_handle = load_spritesheet(&mut data.world);
-        // data.world.add_resource(spritesheet_handle);
+        data.world.add_resource(TextureHandles::default());
 
         // Update manually once, so the "Loading" text is displayed
         data.data.update(&data.world, GameState::Startup);
@@ -365,6 +376,20 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Startup {
         // Initialize entities
         self.load_map(&mut data);
         self.initialize_camera(&mut data.world);
+
+        //         // TODO TEMPORARY
+        //         // load an image with TextureHandles
+        //         let texture_path = resource("textures/bg/bg0.png");
+        //         let texture_handle = data
+        //             .world
+        //             .write_resource::<TextureHandles>()
+        //             .get_or_load(texture_path, &data.world);
+        //         // Create entity with texture
+        //         data.world
+        //             .create_entity()
+        //             .with(Transform::default())
+        //             .with(texture_handle)
+        //             .build();
     }
 
     fn handle_event(
