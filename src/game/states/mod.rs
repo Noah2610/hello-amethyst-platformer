@@ -30,7 +30,7 @@ mod state_prelude {
     pub use amethyst::{State, StateData, StateEvent, Trans};
 
     pub use crate::custom_game_data::prelude::*;
-    pub use crate::game::spritesheets::prelude::*;
+    pub use crate::game::handles::prelude::*;
     pub use crate::resource_helpers::*;
     pub use crate::settings::prelude::*;
     pub use crate::world_helpers::*;

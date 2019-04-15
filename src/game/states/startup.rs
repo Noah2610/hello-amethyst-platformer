@@ -190,11 +190,13 @@ impl Startup {
                 let mut pos = Transform::default();
                 pos.set_xyz(x, y, 0.0);
 
+                let spritesheet_path =
+                    resource(format!("textures/{}.png", tileset_name));
                 let sprite_render = {
                     let spritesheet_handle = data
                         .world
                         .write_resource::<SpriteSheetHandles>()
-                        .get_or_load(tileset_name, &data.world);
+                        .get_or_load(spritesheet_path, &data.world);
                     SpriteRender {
                         sprite_sheet:  spritesheet_handle,
                         sprite_number: id,
@@ -244,11 +246,12 @@ impl Startup {
         // let size = Size::from(settings.player_size);
         let size = Size::from(size);
 
+        let spritesheet_path = resource("textures/spritesheet_player.png");
         let sprite_render = {
             let spritesheet_handle = data
                 .world
                 .write_resource::<SpriteSheetHandles>()
-                .get_or_load("spritesheet_player", &data.world);
+                .get_or_load(spritesheet_path, &data.world);
             SpriteRender {
                 sprite_sheet:  spritesheet_handle,
                 sprite_number: 0,
