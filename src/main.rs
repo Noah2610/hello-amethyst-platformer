@@ -22,12 +22,14 @@ use amethyst::input::InputBundle;
 use amethyst::prelude::*;
 use amethyst::renderer::{
     ColorMask,
+    DepthMode,
     DisplayConfig,
     DrawFlat2D,
     Pipeline,
     RenderBundle,
     Stage,
     ALPHA,
+    REPLACE,
 };
 use amethyst::ui::{DrawUi, UiBundle};
 use amethyst::utils::fps_counter::FPSCounterBundle;
@@ -64,20 +66,23 @@ fn build_game_data<'a, 'b>() -> amethyst::Result<CustomGameDataBuilder<'a, 'b>>
     // Pipeline
     let pipeline = Pipeline::build().with_stage(
         Stage::with_backbuffer()
-            .clear_target([0.2, 0.2, 0.2, 1.0], 1.0)
+            .clear_target([0.2, 0.2, 0.2, 1.0], 10.0)
             .with_pass(DrawFlat2D::new().with_transparency(
                 ColorMask::all(),
                 ALPHA,
-                None,
+                // NOTE: I have no idea what this `DepthMode` does, as it isn't documented,
+                //       but sprite ordering via their z positions only works with this `DepthMode` variant.
+                Some(DepthMode::LessEqualWrite),
             ))
             .with_pass(DrawUi::new()),
     );
 
     // Bundles
+    let transform_bundle = TransformBundle::new();
     let render_bundle =
         RenderBundle::new(pipeline, Some(display_config.clone()))
-            .with_sprite_sheet_processor();
-    let transform_bundle = TransformBundle::new();
+            .with_sprite_sheet_processor()
+            .with_sprite_visibility_sorting(&["transform_system"]);
     let input_bundle = InputBundle::<String, String>::new()
         .with_bindings_from_file(&resource("config/bindings.ron"))?;
     let ui_bundle = UiBundle::<String, String>::new();
@@ -86,8 +91,8 @@ fn build_game_data<'a, 'b>() -> amethyst::Result<CustomGameDataBuilder<'a, 'b>>
     // Create GameDataBuilder
     let game_data = CustomGameDataBuilder::default()
         .with_display_config(display_config)
-        .with_base_bundle(render_bundle)?
         .with_base_bundle(transform_bundle)?
+        .with_base_bundle(render_bundle)?
         .with_base_bundle(input_bundle)?
         .with_base_bundle(ui_bundle)?
         .with_base_bundle(fps_bundle)?
@@ -105,6 +110,10 @@ fn build_game_data<'a, 'b>() -> amethyst::Result<CustomGameDataBuilder<'a, 'b>>
             "limit_velocities_system",
         ])
         .with_ingame(CameraSystem, "camera_system", &["move_entities_system"])
+        .with_ingame(ParallaxSystem, "parallax_system", &[
+            "move_entities_system",
+            "camera_system",
+        ])
         .with_ingame(CollisionSystem, "collision_system", &[
             "move_entities_system",
         ])

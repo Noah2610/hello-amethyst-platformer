@@ -26,7 +26,12 @@ mod state_prelude {
         Transparent,
         VirtualKeyCode,
     };
-    pub use amethyst::ui::{Anchor, TtfFormat, UiText, UiTransform};
+    pub use amethyst::ui::{
+        Anchor as AmethystAnchor,
+        TtfFormat,
+        UiText,
+        UiTransform,
+    };
     pub use amethyst::{State, StateData, StateEvent, Trans};
 
     pub use crate::custom_game_data::prelude::*;

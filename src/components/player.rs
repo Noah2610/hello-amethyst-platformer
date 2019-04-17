@@ -19,7 +19,7 @@ impl Player {
         PlayerBuilder::default()
     }
 
-    pub fn with_acceleration(acceleration: (f32, f32)) -> Self {
+    pub fn with_acceleration(acceleration: Vector) -> Self {
         Self {
             acceleration,
             is_jump_button_down: false,
@@ -114,8 +114,8 @@ impl Component for Player {
 impl Default for Player {
     fn default() -> Self {
         Self {
-            acceleration:        (1500.0, 0.0),
-            run_acceleration:    (2000.0, 0.0),
+            acceleration:        (1500.0, 0.0).into(),
+            run_acceleration:    (2000.0, 0.0).into(),
             max_velocity:        (Some(400.0), None),
             run_max_velocity:    (Some(800.0), None),
             is_jump_button_down: false,

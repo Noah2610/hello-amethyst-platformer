@@ -4,11 +4,17 @@ use json::JsonValue;
 use super::super::Ingame;
 use super::state_prelude::*;
 use crate::components::prelude::*;
-use crate::geo::Vector;
+use deathframe::geo::{Anchor, Vector};
+
+const BACKGROUND_Z: f32 = -1.0;
+const FOREGROUND_Z: f32 = 0.0;
+const FORE_FOREGROUND_Z: f32 = 0.5;
 
 pub struct Startup {
     player_id:      Option<Index>,
+    camera_id:      Option<Index>,
     loading_entity: Option<Entity>,
+    parallax_data:  Vec<(Vector, Vector, JsonValue)>,
     loaded_map:     bool,
     loaded_camera:  bool,
 }
@@ -17,7 +23,9 @@ impl Startup {
     pub fn new() -> Self {
         Self {
             player_id:      None,
+            camera_id:      None,
             loading_entity: None,
+            parallax_data:  Vec::new(),
             loaded_map:     false,
             loaded_camera:  false,
         }
@@ -61,7 +69,7 @@ impl Startup {
 
         let transform = new_ui_transform(
             "loading",
-            Anchor::Middle,
+            AmethystAnchor::Middle,
             (0.0, 0.0, 0.0, screen_size.0 as f32, screen_size.1 as f32, 0),
         );
 
@@ -83,7 +91,7 @@ impl Startup {
         let settings = world.read_resource::<Settings>().clone();
 
         let mut transform = Transform::default();
-        transform.set_z(1.0);
+        transform.set_z(10.0);
 
         let mut camera = Camera::new()
             .base_speed({ settings.camera.base_speed })
@@ -93,7 +101,7 @@ impl Startup {
             camera = camera.follow(player_id);
         }
 
-        world
+        let entity = world
             .create_entity()
             .with(AmethystCamera::from(Projection::orthographic(
                 0.0,                    // Left
@@ -109,6 +117,7 @@ impl Startup {
             .with(Collision::new())
             .build();
 
+        self.camera_id = Some(entity.id());
         self.loaded_camera = true;
     }
 
@@ -127,8 +136,6 @@ impl Startup {
         let json = json::parse(&json_raw).expect("Could not parse JSON");
 
         const TILE_SIZE: (f32, f32) = (32.0, 32.0); // TODO: Read this data from tileset JSON file
-
-        let mut camera_datas = Vec::new();
 
         // OBJECTS
         for object_data in json["objects"].members() {
@@ -150,25 +157,19 @@ impl Startup {
                 &object_data["properties"],
             ) {
                 match obj_type {
-                    "Player" => {
-                        self.initialize_player_with(data, (x, y), (w, h))
-                    }
-                    "Parallax" => {
-                        camera_datas.push(((x, y), (w, h), properties))
-                    }
+                    "Player" => self.initialize_player_with(
+                        data,
+                        (x, y).into(),
+                        (w, h).into(),
+                    ),
+                    "Parallax" => self.parallax_data.push((
+                        (x, y).into(),
+                        (w, h).into(),
+                        properties.clone(),
+                    )),
                     _ => (),
                 }
             }
-        }
-
-        // Camera Object - player should have been loaded at this point
-        for camera_data in camera_datas {
-            self.initialize_parallax_with(
-                data,
-                camera_data.0,
-                camera_data.1,
-                camera_data.2,
-            )
         }
 
         // TILES
@@ -188,7 +189,7 @@ impl Startup {
                 tile_data["ts"].as_str(),
             ) {
                 let mut pos = Transform::default();
-                pos.set_xyz(x, y, 0.0);
+                pos.set_xyz(x, y, FOREGROUND_Z);
 
                 let spritesheet_path =
                     resource(format!("textures/{}.png", tileset_name));
@@ -209,7 +210,8 @@ impl Startup {
                     .with(pos)
                     .with(Size::from(TILE_SIZE))
                     .with(ScaleOnce)
-                    .with(sprite_render);
+                    .with(sprite_render)
+                    .with(Transparent);
 
                 for component_name in component_names {
                     let component_name_str = component_name
@@ -241,9 +243,7 @@ impl Startup {
         let settings = data.world.settings();
 
         let mut transform = Transform::default();
-        transform.set_xyz(pos.0, pos.1, 0.0);
-        // transform.set_xyz(0.0, 0.0, 0.0);
-        // let size = Size::from(settings.player_size);
+        transform.set_xyz(pos.0, pos.1, FORE_FOREGROUND_Z); // NOTE: Draw player above foreground elements
         let size = Size::from(size);
 
         let spritesheet_path = resource("textures/spritesheet_player.png");
@@ -297,7 +297,7 @@ impl Startup {
 
         let settings = data.world.settings();
 
-        if let Some(player_id) = self.player_id {
+        if let Some(camera_id) = self.camera_id {
             // Load bg image texture
             let texture_handle_opt = if let Some((_, bg_filename)) =
                 properties.entries().find(|(key, _)| key == &"image")
@@ -320,15 +320,20 @@ impl Startup {
 
             // Create entity
             let mut entity = data.world.create_entity();
-            let mut camera = Camera::new().follow(player_id);
+            let mut parallax = Parallax::new()
+                .follow(camera_id)
+                .follow_anchor(Anchor::BottomLeft);
 
             for (key, val) in properties.entries() {
                 match (key, &texture_handle_opt) {
                     ("base_speed", _) => {
-                        camera = camera.base_speed((
-                            val.as_f32().expect(&err_msg),
-                            val.as_f32().expect(&err_msg),
-                        ))
+                        // camera = camera.base_speed(
+                        //     (
+                        //         val.as_f32().expect(&err_msg),
+                        //         val.as_f32().expect(&err_msg),
+                        //     )
+                        //         .into(),
+                        // )
                     }
                     ("image", Some(texture_handle)) => {
                         entity = entity.with(texture_handle.clone())
@@ -340,15 +345,17 @@ impl Startup {
 
             // Add transform and size to entity
             let mut transform = Transform::default();
-            // transform.set_xyz(pos.0, pos.1, 0.0);
-            transform.set_z(0.0);
+            transform.set_xyz(pos.0, pos.1, BACKGROUND_Z); // NOTE: Draw parallax backgrounds behind foreground
+                                                           // TODO: Read appropriate z index from map
             entity = entity
                 .with(transform)
                 .with(Size::from(size))
                 .with(Velocity::default())
-                .with(ScaleOnce);
+                .with(ScaleOnce)
+                .with(Transparent)
+                .with(parallax.build());
 
-            entity = entity.with(camera.build());
+            entity = entity;
             entity.build();
         }
     }
@@ -376,20 +383,12 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Startup {
         // Initialize entities
         self.load_map(&mut data);
         self.initialize_camera(&mut data.world);
-
-        //         // TODO TEMPORARY
-        //         // load an image with TextureHandles
-        //         let texture_path = resource("textures/bg/bg0.png");
-        //         let texture_handle = data
-        //             .world
-        //             .write_resource::<TextureHandles>()
-        //             .get_or_load(texture_path, &data.world);
-        //         // Create entity with texture
-        //         data.world
-        //             .create_entity()
-        //             .with(Transform::default())
-        //             .with(texture_handle)
-        //             .build();
+        // Now initialize parallax backgrounds
+        for pdata in &self.parallax_data {
+            self.initialize_parallax_with(
+                &mut data, pdata.0, pdata.1, &pdata.2,
+            );
+        }
     }
 
     fn handle_event(
@@ -445,7 +444,7 @@ fn load_settings() -> Settings {
 /// `UiTransform::new` wrapper
 fn new_ui_transform<T: ToString>(
     name: T,
-    anchor: Anchor,
+    anchor: AmethystAnchor,
     pos: (f32, f32, f32, f32, f32, i32),
 ) -> UiTransform {
     UiTransform::new(
