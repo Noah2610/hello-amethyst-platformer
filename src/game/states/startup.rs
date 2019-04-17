@@ -34,8 +34,10 @@ impl Startup {
     fn is_finished_loading(&self, data: &StateData<CustomGameData>) -> bool {
         let spritesheet_handles =
             data.world.read_resource::<SpriteSheetHandles>();
+        let texture_handles = data.world.read_resource::<TextureHandles>();
 
         spritesheet_handles.has_finished_loading_all(&data.world)
+            && texture_handles.has_finished_loading_all(&data.world)
             && self.loaded_map
             && self.loaded_camera
     }
@@ -316,8 +318,6 @@ impl Startup {
                 None
             };
 
-            let err_msg = format!("Couldn't parse value as f32");
-
             // Create entity
             let mut entity = data.world.create_entity();
             let mut parallax = Parallax::new()
@@ -326,19 +326,21 @@ impl Startup {
 
             for (key, val) in properties.entries() {
                 match (key, &texture_handle_opt) {
-                    ("base_speed", _) => {
-                        // camera = camera.base_speed(
-                        //     (
-                        //         val.as_f32().expect(&err_msg),
-                        //         val.as_f32().expect(&err_msg),
-                        //     )
-                        //         .into(),
-                        // )
+                    ("speed_mult", _) => {
+                        parallax = parallax.speed_mult(parse_string_to_vector(
+                            val.as_str()
+                                .expect("Couldn't parse JsonValue as string"),
+                        ));
+                    }
+                    ("offset", _) => {
+                        parallax = parallax.offset(parse_string_to_vector(
+                            val.as_str()
+                                .expect("Couldn't parse JsonValue as string"),
+                        ))
                     }
                     ("image", Some(texture_handle)) => {
                         entity = entity.with(texture_handle.clone())
                     }
-                    // TODO: Add other Camera fields
                     _ => (),
                 }
             }
@@ -355,7 +357,6 @@ impl Startup {
                 .with(Transparent)
                 .with(parallax.build());
 
-            entity = entity;
             entity.build();
         }
     }
@@ -457,4 +458,28 @@ fn new_ui_transform<T: ToString>(
         pos.4, // height
         pos.5, // tab-order (?)
     )
+}
+
+fn parse_string_to_vector<T>(string: T) -> Vector
+where
+    T: ToString,
+{
+    let string = string.to_string();
+    let vec = string
+        .split(",")
+        .map(|s| {
+            s.trim()
+                .parse::<f32>()
+                .expect(&format!("Couldn't parse string as f32: '{:?}'", s))
+        })
+        .collect::<Vec<f32>>();
+    if vec.len() == 2 {
+        (vec[0], vec[1]).into()
+    } else {
+        panic!(format!(
+            "Given string does not have exactly two fields for Vector (x, y): \
+             '{:?}'",
+            string
+        ));
+    }
 }
