@@ -7,8 +7,9 @@ import re
 from tiled import *
 
 class Tile:
-    def __init__(self, tile_map, x, y, cell):
+    def __init__(self, tile_map, layer, x, y, cell):
         self.cell = cell
+        self.layer = layer
         ts = self.tileset()
         # ORIGIN at TOP-LEFT
         # self.pos = { "x": x * ts.tileWidth(), "y": y * ts.tileHeight() }
@@ -26,7 +27,7 @@ class Tile:
         data["id"] = self.tile().id()
         data["pos"] = self.pos
         data["ts"] = ".".join(self.tileset().imageSourceString().split("/")[-1].split(".")[0 : -1])
-        data["properties"] = properties_of(self.tile())
+        data["properties"] = { **properties_of(self.layer), **properties_of(self.tile()) } # Merge layer and tile properties, tile properties getting precedence
         return data
 
     def display(self):
@@ -94,7 +95,8 @@ class Tileset:
         return out
 
 class Object:
-    def __init__(self, tile_map, obj):
+    def __init__(self, tile_map, layer, obj):
+        self.layer = layer
         # ORIGIN at TOP-LEFT
         # self.pos  = { "x": obj.x(), "y": obj.y() }
         # ORIGIN at BOTTOM-LEFT
@@ -114,7 +116,7 @@ class Object:
         data["type"] = self.type
         data["pos"]  = self.pos
         data["size"] = self.size
-        data["properties"] = properties_of(self.obj)
+        data["properties"] = { **properties_of(self.layer), **properties_of(self.obj) } # Merge layer and object properties, object properties getting precedence
         return data
 
 
@@ -154,12 +156,12 @@ class Export(Plugin):
                         for col in range(layer.width()):
                             cell = layer.cellAt(col, row)
                             if not cell.isEmpty():
-                                tiles.append(Tile(tile_map, col, row, cell))
+                                tiles.append(Tile(tile_map, layer, col, row, cell))
             elif isObjectGroupAt(tile_map, layer_idx):
                 layer = objectGroupAt(tile_map, layer_idx)
                 for object_idx in range(layer.objectCount()):
                     tiled_obj = layer.objectAt(object_idx)
-                    objects.append(Object(tile_map, tiled_obj))
+                    objects.append(Object(tile_map, layer, tiled_obj))
 
         json_data = { "map": { "tiles": [], "objects": [] }, "tilesets": {} }
 

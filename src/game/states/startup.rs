@@ -6,9 +6,11 @@ use super::state_prelude::*;
 use crate::components::prelude::*;
 use deathframe::geo::{Anchor, Vector};
 
+const CAMERA_Z: f32 = 10.0;
 const BACKGROUND_Z: f32 = -1.0;
 const FOREGROUND_Z: f32 = 0.0;
 const FORE_FOREGROUND_Z: f32 = 0.5;
+const PROPERTY_Z_KEY: &str = "z";
 
 pub struct Startup {
     player_id:      Option<Index>,
@@ -93,7 +95,7 @@ impl Startup {
         let settings = world.read_resource::<Settings>().clone();
 
         let mut transform = Transform::default();
-        transform.set_z(10.0);
+        transform.set_z(CAMERA_Z);
 
         let mut camera = Camera::new()
             .base_speed({ settings.camera.base_speed })
@@ -163,6 +165,7 @@ impl Startup {
                         data,
                         (x, y).into(),
                         (w, h).into(),
+                        properties.clone(),
                     ),
                     "Parallax" => self.parallax_data.push((
                         (x, y).into(),
@@ -179,7 +182,7 @@ impl Startup {
             if let (
                 Some(id),
                 (Some(x), Some(y)),
-                component_names,
+                properties,
                 Some(tileset_name),
             ) = (
                 tile_data["id"].as_usize(),
@@ -187,11 +190,15 @@ impl Startup {
                     tile_data["pos"]["x"].as_f32(),
                     tile_data["pos"]["y"].as_f32(),
                 ),
-                tile_data["properties"]["components"].members(),
+                &tile_data["properties"],
                 tile_data["ts"].as_str(),
             ) {
                 let mut pos = Transform::default();
-                pos.set_xyz(x, y, FOREGROUND_Z);
+                pos.set_xyz(
+                    x,
+                    y,
+                    properties[PROPERTY_Z_KEY].as_f32().unwrap_or(FOREGROUND_Z),
+                );
 
                 let spritesheet_path =
                     resource(format!("textures/{}.png", tileset_name));
@@ -215,7 +222,7 @@ impl Startup {
                     .with(sprite_render)
                     .with(Transparent);
 
-                for component_name in component_names {
+                for component_name in properties["components"].members() {
                     let component_name_str = component_name
                         .as_str()
                         .expect("Could not parse string JSON");
@@ -241,11 +248,18 @@ impl Startup {
         data: &mut StateData<CustomGameData>,
         pos: Vector,
         size: Vector,
+        properties: JsonValue,
     ) {
         let settings = data.world.settings();
 
         let mut transform = Transform::default();
-        transform.set_xyz(pos.0, pos.1, FORE_FOREGROUND_Z); // NOTE: Draw player above foreground elements
+        transform.set_xyz(
+            pos.0,
+            pos.1,
+            properties[PROPERTY_Z_KEY]
+                .as_f32()
+                .unwrap_or(FORE_FOREGROUND_Z),
+        ); // NOTE: Draw player above foreground elements
         let size = Size::from(size);
 
         let spritesheet_path = resource("textures/spritesheet_player.png");
@@ -347,8 +361,11 @@ impl Startup {
 
             // Add transform and size to entity
             let mut transform = Transform::default();
-            transform.set_xyz(pos.0, pos.1, BACKGROUND_Z); // NOTE: Draw parallax backgrounds behind foreground
-                                                           // TODO: Read appropriate z index from map
+            transform.set_xyz(
+                pos.0,
+                pos.1,
+                properties[PROPERTY_Z_KEY].as_f32().unwrap_or(BACKGROUND_Z),
+            ); // NOTE: Draw parallax backgrounds behind foreground
             entity = entity
                 .with(transform)
                 .with(Size::from(size))
