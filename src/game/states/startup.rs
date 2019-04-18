@@ -1,8 +1,8 @@
 use amethyst::ecs::world::Index;
 use json::JsonValue;
 
-use super::super::Ingame;
 use super::state_prelude::*;
+use super::Ingame;
 use crate::components::prelude::*;
 use deathframe::geo::{Anchor, Vector};
 
@@ -33,7 +33,10 @@ impl Startup {
         }
     }
 
-    fn is_finished_loading(&self, data: &StateData<CustomGameData>) -> bool {
+    fn is_finished_loading(
+        &self,
+        data: &StateData<CustomGameData<DisplayConfig>>,
+    ) -> bool {
         let spritesheet_handles =
             data.world.read_resource::<SpriteSheetHandles>();
         let texture_handles = data.world.read_resource::<TextureHandles>();
@@ -53,15 +56,20 @@ impl Startup {
 
     fn initialize_loading_text(
         &mut self,
-        data: &mut StateData<CustomGameData>,
+        data: &mut StateData<CustomGameData<DisplayConfig>>,
     ) {
         const FONT_SIZE: f32 = 50.0;
         const LOADING_TEXT: &str = "Loading...";
 
         let world = &mut data.world;
 
-        let screen_size =
-            data.data.display_config.dimensions.unwrap_or((1200, 800));
+        let screen_size = data
+            .data
+            .custom
+            .clone()
+            .unwrap()
+            .dimensions
+            .unwrap_or((1200, 800));
 
         let font = world.read_resource::<Loader>().load(
             resource("fonts/square.ttf"),
@@ -125,7 +133,10 @@ impl Startup {
         self.loaded_camera = true;
     }
 
-    fn load_map(&mut self, data: &mut StateData<CustomGameData>) {
+    fn load_map(
+        &mut self,
+        data: &mut StateData<CustomGameData<DisplayConfig>>,
+    ) {
         use std::fs::File;
         use std::io::prelude::*;
 
@@ -245,7 +256,7 @@ impl Startup {
 
     fn initialize_player_with(
         &mut self,
-        data: &mut StateData<CustomGameData>,
+        data: &mut StateData<CustomGameData<DisplayConfig>>,
         pos: Vector,
         size: Vector,
         properties: JsonValue,
@@ -304,7 +315,7 @@ impl Startup {
 
     fn initialize_parallax_with(
         &self,
-        data: &mut StateData<CustomGameData>,
+        data: &mut StateData<CustomGameData<DisplayConfig>>,
         pos: Vector,
         size: Vector,
         properties: &JsonValue,
@@ -379,8 +390,10 @@ impl Startup {
     }
 }
 
-impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Startup {
-    fn on_start(&mut self, mut data: StateData<CustomGameData>) {
+impl<'a, 'b> State<CustomGameData<'a, 'b, DisplayConfig>, StateEvent>
+    for Startup
+{
+    fn on_start(&mut self, mut data: StateData<CustomGameData<DisplayConfig>>) {
         // Register components
         self.register_components(&mut data.world);
 
@@ -392,7 +405,7 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Startup {
         data.world.add_resource(TextureHandles::default());
 
         // Update manually once, so the "Loading" text is displayed
-        data.data.update(&data.world, GameState::Startup);
+        data.data.update(&data.world, "startup");
 
         // Settings RON
         let settings = load_settings();
@@ -411,9 +424,9 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Startup {
 
     fn handle_event(
         &mut self,
-        data: StateData<CustomGameData>,
+        data: StateData<CustomGameData<DisplayConfig>>,
         event: StateEvent,
-    ) -> Trans<CustomGameData<'a, 'b>, StateEvent> {
+    ) -> Trans<CustomGameData<'a, 'b, DisplayConfig>, StateEvent> {
         if let StateEvent::Window(event) = &event {
             if is_close_requested(&event)
                 || data.world.input().action_is_down("quit").unwrap_or(false)
@@ -429,9 +442,9 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Startup {
 
     fn update(
         &mut self,
-        data: StateData<CustomGameData>,
-    ) -> Trans<CustomGameData<'a, 'b>, StateEvent> {
-        data.data.update(&data.world, GameState::Startup);
+        data: StateData<CustomGameData<DisplayConfig>>,
+    ) -> Trans<CustomGameData<'a, 'b, DisplayConfig>, StateEvent> {
+        data.data.update(&data.world, "startup");
 
         if self.is_finished_loading(&data) {
             // Create new Ingame state first

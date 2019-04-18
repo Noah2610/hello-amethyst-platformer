@@ -2,16 +2,18 @@ use super::state_prelude::*;
 
 pub struct Paused;
 
-impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Paused {
-    fn on_start(&mut self, data: StateData<CustomGameData>) {
+impl<'a, 'b> State<CustomGameData<'a, 'b, DisplayConfig>, StateEvent>
+    for Paused
+{
+    fn on_start(&mut self, data: StateData<CustomGameData<DisplayConfig>>) {
         // Create paused UI
     }
 
     fn handle_event(
         &mut self,
-        data: StateData<CustomGameData>,
+        data: StateData<CustomGameData<DisplayConfig>>,
         event: StateEvent,
-    ) -> Trans<CustomGameData<'a, 'b>, StateEvent> {
+    ) -> Trans<CustomGameData<'a, 'b, DisplayConfig>, StateEvent> {
         if let StateEvent::Window(event) = &event {
             let input = data.world.input();
             if is_close_requested(&event)
@@ -31,9 +33,9 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Paused {
 
     fn update(
         &mut self,
-        data: StateData<CustomGameData>,
-    ) -> Trans<CustomGameData<'a, 'b>, StateEvent> {
-        data.data.update(&data.world, GameState::Paused);
+        data: StateData<CustomGameData<DisplayConfig>>,
+    ) -> Trans<CustomGameData<'a, 'b, DisplayConfig>, StateEvent> {
+        data.data.update(&data.world, "paused");
         Trans::None
     }
 }

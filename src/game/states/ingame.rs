@@ -5,15 +5,17 @@ use crate::geo::Vector;
 
 pub struct Ingame;
 
-impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Ingame {
-    fn on_start(&mut self, data: StateData<CustomGameData>) {
+impl<'a, 'b> State<CustomGameData<'a, 'b, DisplayConfig>, StateEvent>
+    for Ingame
+{
+    fn on_start(&mut self, data: StateData<CustomGameData<DisplayConfig>>) {
     }
 
     fn handle_event(
         &mut self,
-        data: StateData<CustomGameData>,
+        data: StateData<CustomGameData<DisplayConfig>>,
         event: StateEvent,
-    ) -> Trans<CustomGameData<'a, 'b>, StateEvent> {
+    ) -> Trans<CustomGameData<'a, 'b, DisplayConfig>, StateEvent> {
         if let StateEvent::Window(event) = &event {
             let input = data.world.input();
             if is_close_requested(&event)
@@ -32,9 +34,9 @@ impl<'a, 'b> State<CustomGameData<'a, 'b>, StateEvent> for Ingame {
 
     fn update(
         &mut self,
-        data: StateData<CustomGameData>,
-    ) -> Trans<CustomGameData<'a, 'b>, StateEvent> {
-        data.data.update(&data.world, GameState::Ingame);
+        data: StateData<CustomGameData<DisplayConfig>>,
+    ) -> Trans<CustomGameData<'a, 'b, DisplayConfig>, StateEvent> {
+        data.data.update(&data.world, "ingame");
         Trans::None
     }
 }

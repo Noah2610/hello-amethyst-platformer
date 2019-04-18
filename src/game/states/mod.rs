@@ -15,6 +15,7 @@ mod state_prelude {
     pub use amethyst::prelude::*;
     pub use amethyst::renderer::{
         Camera as AmethystCamera,
+        DisplayConfig,
         PngFormat,
         Projection,
         SpriteRender,
@@ -34,7 +35,8 @@ mod state_prelude {
     };
     pub use amethyst::{State, StateData, StateEvent, Trans};
 
-    pub use crate::custom_game_data::prelude::*;
+    pub use deathframe::custom_game_data::prelude::*;
+
     pub use crate::game::handles::prelude::*;
     pub use crate::resource_helpers::*;
     pub use crate::settings::prelude::*;
