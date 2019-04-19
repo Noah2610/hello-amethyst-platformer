@@ -151,14 +151,15 @@ class Export(Plugin):
         for layer_idx in range(tile_map.layerCount()):
             if isTileLayerAt(tile_map, layer_idx):
                 layer = tileLayerAt(tile_map, layer_idx)
-                if layer.isVisible():
-                    for row in range(layer.height()):
-                        for col in range(layer.width()):
-                            cell = layer.cellAt(col, row)
-                            if not cell.isEmpty():
-                                tiles.append(Tile(tile_map, layer, col, row, cell))
+                #if layer.isVisible():
+                for row in range(layer.height()):
+                    for col in range(layer.width()):
+                        cell = layer.cellAt(col, row)
+                        if not cell.isEmpty():
+                            tiles.append(Tile(tile_map, layer, col, row, cell))
             elif isObjectGroupAt(tile_map, layer_idx):
                 layer = objectGroupAt(tile_map, layer_idx)
+                #if layer.isVisible():
                 for object_idx in range(layer.objectCount()):
                     tiled_obj = layer.objectAt(object_idx)
                     objects.append(Object(tile_map, layer, tiled_obj))
@@ -172,8 +173,8 @@ class Export(Plugin):
             json_data["map"]["tiles"].append(tile.data())
 
         for obj in objects:
-            if obj.is_visible():
-                json_data["map"]["objects"].append(obj.data())
+            #if obj.is_visible():
+            json_data["map"]["objects"].append(obj.data())
 
         with open(filepath_map, "w") as file_handle:
             print(json.dumps(json_data["map"]), file=file_handle)

@@ -150,7 +150,8 @@ impl Startup {
             .expect("Should read file content: map.json");
         let json = json::parse(&json_raw).expect("Could not parse JSON");
 
-        const TILE_SIZE: (f32, f32) = (32.0, 32.0); // TODO: Read this data from tileset JSON file
+        // const TILE_SIZE: (f32, f32) = (32.0, 32.0); // TODO: Read this data from tileset JSON file
+        const TILE_SIZE: (f32, f32) = (16.0, 16.0); // TODO: Read this data from tileset JSON file
 
         // OBJECTS
         for object_data in json["objects"].members() {
@@ -308,7 +309,7 @@ impl Startup {
             .with(Solid)
             .with(Collision::new())
             .with(CheckCollision)
-            .with(Pushable)
+            .with(Push)
             .build();
         self.player_id = Some(player.id());
     }

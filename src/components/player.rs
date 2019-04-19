@@ -19,15 +19,6 @@ impl Player {
         PlayerBuilder::default()
     }
 
-    pub fn with_acceleration(acceleration: Vector) -> Self {
-        Self {
-            acceleration,
-            is_jump_button_down: false,
-            is_run_button_down: false,
-            ..Self::default()
-        }
-    }
-
     pub fn current_acceleration(&self) -> Vector {
         if self.is_run_button_down {
             self.run_acceleration
@@ -85,12 +76,15 @@ impl PlayerBuilder {
 
     pub fn build(self) -> Player {
         let default = Player::default();
-        let acceleration = self.acceleration.unwrap_or(default.acceleration);
-        let run_max_velocity =
-            self.run_max_velocity.unwrap_or(default.run_max_velocity);
         Player {
-            acceleration,
-            run_max_velocity,
+            acceleration: self.acceleration.unwrap_or(default.acceleration),
+            run_acceleration: self
+                .run_acceleration
+                .unwrap_or(default.run_acceleration),
+            max_velocity: self.max_velocity.unwrap_or(default.max_velocity),
+            run_max_velocity: self
+                .run_max_velocity
+                .unwrap_or(default.run_max_velocity),
             ..default
         }
     }
