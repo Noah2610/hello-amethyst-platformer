@@ -2,6 +2,7 @@ use deathframe::geo::Vector;
 
 use super::component_prelude::*;
 
+#[derive(Serialize, Deserialize)]
 pub struct Player {
     pub acceleration:        Vector,
     pub run_acceleration:    Vector,

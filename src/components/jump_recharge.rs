@@ -1,5 +1,6 @@
 use super::component_prelude::*;
 
+#[derive(Serialize, Deserialize)]
 pub struct JumpRecharge;
 
 impl Component for JumpRecharge {

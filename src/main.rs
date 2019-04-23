@@ -1,10 +1,15 @@
 extern crate deathframe;
 
 extern crate amethyst;
+#[macro_use]
+extern crate amethyst_editor_sync;
 extern crate json;
 extern crate regex;
 extern crate ron;
+#[macro_use]
 extern crate serde;
+extern crate serde_json;
+extern crate tap;
 
 mod game;
 mod resource_helpers;
@@ -33,9 +38,12 @@ use amethyst::renderer::{
 use amethyst::ui::{DrawUi, UiBundle};
 use amethyst::utils::fps_counter::FPSCounterBundle;
 use amethyst::{LogLevelFilter, LoggerConfig};
+use amethyst_editor_sync::SyncEditorBundle;
+use tap::*;
 
 use deathframe::custom_game_data::prelude::*;
 
+use components::prelude as comps;
 use resource_helpers::*;
 use systems::prelude::*;
 
@@ -87,6 +95,33 @@ fn build_game_data<'a, 'b>(
         .with_bindings_from_file(&resource("config/bindings.ron"))?;
     let ui_bundle = UiBundle::<String, String>::new();
     let fps_bundle = FPSCounterBundle;
+    // amethyst_editor_sync bundle
+    let editor_bundle = SyncEditorBundle::default()
+        // Register the default types from the engine.
+        .tap(SyncEditorBundle::sync_default_types)
+        // Register the components and resources specified above.
+        .tap(|bundle| {
+            read_components!(
+                bundle,
+                comps::Camera,
+                comps::CheckCollision,
+                comps::Collision,
+                comps::DecreaseVelocity,
+                comps::Gravity,
+                comps::InnerSize,
+                comps::MaxVelocity,
+                comps::Parallax,
+                comps::Push,
+                comps::Pushable,
+                comps::ScaleOnce,
+                comps::Size,
+                comps::Solid,
+                comps::Velocity,
+                comps::JumpRecharge,
+                comps::Player,
+            )
+        })
+        .tap(|bundle| sync_resources!(bundle, settings::Settings));
 
     // Create GameDataBuilder
     let game_data = CustomGameData::<DisplayConfig>::new()
@@ -99,6 +134,7 @@ fn build_game_data<'a, 'b>(
         .with_core_bundle(input_bundle)?
         .with_core_bundle(ui_bundle)?
         .with_core_bundle(fps_bundle)?
+        .with_core_bundle(editor_bundle)?
         .with_core(ScaleSpritesSystem, "scale_sprites_system", &[])?
         .with_core(DebugSystem::default(), "debug_system", &[])?
         .with("ingame", ControlPlayerSystem, "control_player_system", &[])?

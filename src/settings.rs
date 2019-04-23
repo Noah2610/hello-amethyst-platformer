@@ -1,4 +1,8 @@
+use std::fmt;
+
 use deathframe::geo::Vector;
+use serde::de::{self, Visitor};
+use serde::{Deserialize, Deserializer, Serialize};
 
 pub mod prelude {
     pub use super::Settings;
@@ -8,13 +12,13 @@ pub mod prelude {
 }
 
 // TODO: Refactor this. Less fields; more structs.
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Settings {
     pub camera: SettingsCamera,
     pub player: SettingsPlayer,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SettingsCamera {
     pub size:       Vector,
     pub inner_size: Vector,
@@ -22,7 +26,7 @@ pub struct SettingsCamera {
     pub deadzone:   Vector,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SettingsPlayer {
     pub size:                   Vector,
     pub acceleration:           Vector,
@@ -39,17 +43,12 @@ pub struct SettingsPlayer {
     pub is_double_jump_enabled: bool,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize)]
 pub enum SettingsPlayerQuickTurnaround {
     No,             // 0
     ResetVelocity,  // 1
     InvertVelocity, // 2
 }
-
-use std::fmt;
-
-use serde::de::{self, Visitor};
-use serde::{Deserialize, Deserializer};
 
 struct QTAVisitor;
 
