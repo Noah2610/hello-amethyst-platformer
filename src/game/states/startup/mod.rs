@@ -1,10 +1,6 @@
-use amethyst::ecs::world::Index;
-use json::JsonValue;
-
 use super::state_prelude::*;
 use super::Ingame;
 use crate::components::prelude::*;
-use deathframe::geo::{Anchor, Vector};
 use map_loader::MapLoader;
 
 mod map_loader;
@@ -20,11 +16,8 @@ mod constants {
 
 }
 
-use constants::*;
-
 pub struct Startup {
     loading_entity: Option<Entity>,
-    parallax_data:  Vec<(Vector, Vector, JsonValue)>,
     map_loader:     MapLoader,
 }
 
@@ -32,7 +25,6 @@ impl Startup {
     pub fn new() -> Self {
         Self {
             loading_entity: None,
-            parallax_data:  Vec::new(),
             map_loader:     MapLoader::new(),
         }
     }
@@ -118,24 +110,15 @@ impl<'a, 'b> State<CustomGameData<'a, 'b, DisplayConfig>, StateEvent>
         data.world.add_resource(TextureHandles::default());
 
         // Update manually once, so the "Loading" text is displayed
-        data.data.update(&data.world, "startup");
+        data.data.update(&data.world, "startup").unwrap();
 
         // Settings RON
         let settings = load_settings();
         data.world.add_resource(settings);
 
         // Load map
-        use std::time::{Duration, Instant};
-
-        let start = Instant::now();
         self.map_loader.load_map("map.json");
-        let duration = Instant::now().duration_since(start);
-        println!("load_map: {:?}", duration);
-
-        let start = Instant::now();
         self.map_loader.build(&mut data);
-        let duration = Instant::now().duration_since(start);
-        println!("build: {:?}", duration);
     }
 
     fn handle_event(
@@ -160,7 +143,7 @@ impl<'a, 'b> State<CustomGameData<'a, 'b, DisplayConfig>, StateEvent>
         &mut self,
         data: StateData<CustomGameData<DisplayConfig>>,
     ) -> Trans<CustomGameData<'a, 'b, DisplayConfig>, StateEvent> {
-        data.data.update(&data.world, "startup");
+        data.data.update(&data.world, "startup").unwrap();
 
         if self.is_finished_loading(&data) {
             // Create new Ingame state first
