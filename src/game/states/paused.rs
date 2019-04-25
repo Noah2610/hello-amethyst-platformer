@@ -2,6 +2,23 @@ use super::state_prelude::*;
 
 pub struct Paused;
 
+impl<'a, 'b> Paused {
+    fn handle_keys(
+        &self,
+        data: &StateData<CustomGameData<DisplayConfig>>,
+    ) -> Option<Trans<CustomGameData<'a, 'b, DisplayConfig>, StateEvent>> {
+        let input = data.world.input_manager();
+        if input.is_up("quit") {
+            Some(Trans::Quit)
+        } else if input.is_down("pause") {
+            println!("UNpause");
+            Some(Trans::Pop)
+        } else {
+            None
+        }
+    }
+}
+
 impl<'a, 'b> State<CustomGameData<'a, 'b, DisplayConfig>, StateEvent>
     for Paused
 {
@@ -15,15 +32,8 @@ impl<'a, 'b> State<CustomGameData<'a, 'b, DisplayConfig>, StateEvent>
         event: StateEvent,
     ) -> Trans<CustomGameData<'a, 'b, DisplayConfig>, StateEvent> {
         if let StateEvent::Window(event) = &event {
-            let input = data.world.input();
-            if is_close_requested(&event)
-                || input.action_is_down("quit").unwrap_or(false)
-            {
+            if is_close_requested(&event) {
                 Trans::Quit
-            } else if input.action_is_down("pause").unwrap_or(false) {
-                println!("UNpause");
-                // Remove paused UI
-                Trans::Pop
             } else {
                 Trans::None
             }
@@ -36,7 +46,10 @@ impl<'a, 'b> State<CustomGameData<'a, 'b, DisplayConfig>, StateEvent>
         &mut self,
         data: StateData<CustomGameData<DisplayConfig>>,
     ) -> Trans<CustomGameData<'a, 'b, DisplayConfig>, StateEvent> {
-        data.data.update(&data.world, "paused");
+        data.data.update(&data.world, "paused").unwrap();
+        if let Some(trans) = self.handle_keys(&data) {
+            return trans;
+        }
         Trans::None
     }
 }

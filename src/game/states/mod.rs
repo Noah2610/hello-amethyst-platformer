@@ -36,6 +36,7 @@ mod state_prelude {
     pub use amethyst::{State, StateData, StateEvent, Trans};
 
     pub use deathframe::custom_game_data::prelude::*;
+    pub use deathframe::input_manager::InputManager;
 
     pub use crate::game::handles::prelude::*;
     pub use crate::resource_helpers::*;

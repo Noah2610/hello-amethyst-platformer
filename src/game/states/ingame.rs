@@ -5,6 +5,23 @@ use crate::geo::Vector;
 
 pub struct Ingame;
 
+impl<'a, 'b> Ingame {
+    fn handle_keys(
+        &self,
+        data: &StateData<CustomGameData<DisplayConfig>>,
+    ) -> Option<Trans<CustomGameData<'a, 'b, DisplayConfig>, StateEvent>> {
+        let input = data.world.input_manager();
+        if input.is_up("quit") {
+            Some(Trans::Quit)
+        } else if input.is_down("pause") {
+            println!("PAUSE");
+            Some(Trans::Push(Box::new(Paused)))
+        } else {
+            None
+        }
+    }
+}
+
 impl<'a, 'b> State<CustomGameData<'a, 'b, DisplayConfig>, StateEvent>
     for Ingame
 {
@@ -17,14 +34,8 @@ impl<'a, 'b> State<CustomGameData<'a, 'b, DisplayConfig>, StateEvent>
         event: StateEvent,
     ) -> Trans<CustomGameData<'a, 'b, DisplayConfig>, StateEvent> {
         if let StateEvent::Window(event) = &event {
-            let input = data.world.input();
-            if is_close_requested(&event)
-                || input.action_is_down("quit").unwrap_or(false)
-            {
+            if is_close_requested(&event) {
                 Trans::Quit
-            } else if input.action_is_down("pause").unwrap_or(false) {
-                println!("PAUSE");
-                Trans::Push(Box::new(Paused))
             } else {
                 Trans::None
             }
@@ -37,7 +48,10 @@ impl<'a, 'b> State<CustomGameData<'a, 'b, DisplayConfig>, StateEvent>
         &mut self,
         data: StateData<CustomGameData<DisplayConfig>>,
     ) -> Trans<CustomGameData<'a, 'b, DisplayConfig>, StateEvent> {
-        data.data.update(&data.world, "ingame");
+        data.data.update(&data.world, "ingame").unwrap();
+        if let Some(trans) = self.handle_keys(&data) {
+            return trans;
+        }
         Trans::None
     }
 }
