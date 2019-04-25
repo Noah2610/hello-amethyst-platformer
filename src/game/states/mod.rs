@@ -30,6 +30,7 @@ mod state_prelude {
     pub use amethyst::ui::{
         Anchor as AmethystAnchor,
         TtfFormat,
+        UiCreator,
         UiText,
         UiTransform,
     };

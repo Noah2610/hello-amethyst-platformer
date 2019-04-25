@@ -1,0 +1,29 @@
+#![enable(implicit_some)]
+Button(
+  transform: (
+    id: "pause_button",
+    x: 0.0,
+    y: 0.0,
+    width: 256.0,
+    height: 128.0,
+    anchor: Middle,
+    mouse_reactive: true,
+  ),
+  button: (
+    text: "PAUSE",
+    font: File("resources/fonts/square.ttf", Ttf, ()),
+    font_size: 32.0,
+    normal_text_color: (0.2, 0.2, 1.0, 1.0),
+    hover_text_color: (0.4, 0.4, 1.0, 1.0),
+    press_text_color: (0.6, 0.6, 1.0, 1.0),
+  ),
+  size: Size(
+    w: 256.0,
+    h: 128.0,
+  ),
+  scale_once: ScaleOnce(),
+  velocity: Velocity(
+    x: 50.0,
+    y: -10.0,
+  ),
+)

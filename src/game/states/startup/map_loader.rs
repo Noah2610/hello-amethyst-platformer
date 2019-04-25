@@ -76,16 +76,9 @@ impl MapLoader {
 
     /// Builds the loaded data using the given `StateData`.
     pub fn build<T>(&mut self, data: &mut StateData<CustomGameData<T>>) {
-        // PLAYER
         self.build_player(data);
-
-        // CAMERA
         self.build_camera(data);
-
-        // TILES
         self.build_tiles(data);
-
-        // PARALLAX
         self.build_parallax(data);
     }
 

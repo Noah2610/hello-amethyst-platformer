@@ -82,7 +82,7 @@ fn build_game_data<'a, 'b>(
                 //       but sprite ordering via their z positions only works with this `DepthMode` variant.
                 Some(DepthMode::LessEqualWrite),
             ))
-            .with_pass(DrawUi::new()),
+            .with_pass(DrawUi::new()), // NOTE: "It's recommended this be your last pass."
     );
 
     // Bundles

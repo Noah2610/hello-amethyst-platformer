@@ -1,7 +1,5 @@
 use super::state_prelude::*;
 use super::Paused;
-use crate::components::prelude::*;
-use crate::geo::Vector;
 
 pub struct Ingame;
 
@@ -14,8 +12,7 @@ impl<'a, 'b> Ingame {
         if input.is_up("quit") {
             Some(Trans::Quit)
         } else if input.is_down("pause") {
-            println!("PAUSE");
-            Some(Trans::Push(Box::new(Paused)))
+            Some(Trans::Push(Box::new(Paused::default())))
         } else {
             None
         }

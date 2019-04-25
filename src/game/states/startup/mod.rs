@@ -105,12 +105,12 @@ impl<'a, 'b> State<CustomGameData<'a, 'b, DisplayConfig>, StateEvent>
         // Loading font
         self.initialize_loading_text(&mut data);
 
+        // Update manually once, so the "Loading" text is displayed
+        data.data.update(&data.world, "startup").unwrap();
+
         // Spritesheets and Textures
         data.world.add_resource(SpriteSheetHandles::default());
         data.world.add_resource(TextureHandles::default());
-
-        // Update manually once, so the "Loading" text is displayed
-        data.data.update(&data.world, "startup").unwrap();
 
         // Settings RON
         let settings = load_settings();
@@ -127,9 +127,7 @@ impl<'a, 'b> State<CustomGameData<'a, 'b, DisplayConfig>, StateEvent>
         event: StateEvent,
     ) -> Trans<CustomGameData<'a, 'b, DisplayConfig>, StateEvent> {
         if let StateEvent::Window(event) = &event {
-            if is_close_requested(&event)
-                || data.world.input().action_is_down("quit").unwrap_or(false)
-            {
+            if is_close_requested(&event) {
                 Trans::Quit
             } else {
                 Trans::None
