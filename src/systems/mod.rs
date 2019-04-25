@@ -30,6 +30,7 @@ mod system_prelude {
         SpriteSheet,
         SpriteSheetHandle,
     };
+    pub use deathframe::input_manager::InputManager;
 
     pub use crate::components::prelude::*;
     pub use crate::settings::prelude::*;

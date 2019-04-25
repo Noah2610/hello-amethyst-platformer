@@ -64,7 +64,7 @@ impl ControlPlayerSystem {
     fn handle_wall_cling(
         &self,
         settings: &Settings,
-        input: &Read<InputHandler<String, String>>,
+        input_manager: &Read<InputManager>,
         player: &mut Player,
         velocity: &mut Velocity,
         (touching_horizontally_side, touching_vertically_side): (
@@ -90,10 +90,8 @@ impl ControlPlayerSystem {
                     velocity.y = slide_strength;
                 }
                 // Wall Jump
-                if let Some(is_action_down) =
-                    input.action_is_down("player_jump")
-                {
-                    if is_action_down && !player.is_jump_button_down {
+                if input_manager.is_pressed("player_jump") {
+                    if !player.is_jump_button_down {
                         if velocity.y < 0.0 {
                             velocity.y = 0.0;
                         }
@@ -109,7 +107,9 @@ impl ControlPlayerSystem {
                             _ => (),
                         }
                     }
-                    player.is_jump_button_down = is_action_down;
+                    player.is_jump_button_down = true;
+                } else {
+                    player.is_jump_button_down = false;
                 }
             }
         }
@@ -190,40 +190,39 @@ impl ControlPlayerSystem {
     fn handle_jump(
         &self,
         settings: &Settings,
-        input: &InputHandler<String, String>,
+        input_manager: &InputManager,
         player: &mut Player,
         velocity: &mut Velocity,
         gravity_opt: &mut Option<&mut Gravity>,
     ) {
-        if let Some(is_jump_down) = input.action_is_down("player_jump") {
-            let should_jump = (player.on_ground()  // Is standing on ground
+        let is_jump_down = input_manager.is_pressed("player_jump");
+        let should_jump = (player.on_ground()  // Is standing on ground
                     || (settings.player.is_double_jump_enabled  // Or has double jump available
                         && !player.has_double_jumped))
                     && is_jump_down  // And jump button is currently down
                     && !player.is_jump_button_down; // And jump button has not already been down
-            if should_jump {
-                player.has_double_jumped = player.in_air();
-                if velocity.y < 0.0 {
-                    velocity.y = 0.0;
-                }
-                velocity.y += settings.player.jump_strength;
-                gravity_opt.as_mut().map(|gravity| {
-                    gravity.x = settings.player.jump_gravity.0;
-                    gravity.y = settings.player.jump_gravity.1;
-                });
-            } else if !is_jump_down {
-                let decr_jump_strength = settings.player.jump_strength * 0.25;
-                if velocity.y > decr_jump_strength {
-                    velocity.y = (velocity.y - decr_jump_strength)
-                        .max(decr_jump_strength);
-                }
-                gravity_opt.as_mut().map(|gravity| {
-                    gravity.x = settings.player.gravity.0;
-                    gravity.y = settings.player.gravity.1;
-                });
+        if should_jump {
+            player.has_double_jumped = player.in_air();
+            if velocity.y < 0.0 {
+                velocity.y = 0.0;
             }
-            player.is_jump_button_down = is_jump_down;
+            velocity.y += settings.player.jump_strength;
+            gravity_opt.as_mut().map(|gravity| {
+                gravity.x = settings.player.jump_gravity.0;
+                gravity.y = settings.player.jump_gravity.1;
+            });
+        } else if !is_jump_down {
+            let decr_jump_strength = settings.player.jump_strength * 0.25;
+            if velocity.y > decr_jump_strength {
+                velocity.y =
+                    (velocity.y - decr_jump_strength).max(decr_jump_strength);
+            }
+            gravity_opt.as_mut().map(|gravity| {
+                gravity.x = settings.player.gravity.0;
+                gravity.y = settings.player.gravity.1;
+            });
         }
+        player.is_jump_button_down = is_jump_down;
 
         if player.on_ground() || player.on_wall() {
             player.has_double_jumped = false;
@@ -234,24 +233,23 @@ impl ControlPlayerSystem {
     /// Increase max velocity when holding down run button.
     fn handle_run(
         &self,
-        input: &InputHandler<String, String>,
+        input_manager: &InputManager,
         player: &mut Player,
         max_velocity_opt: &mut Option<&mut MaxVelocity>,
     ) {
-        if let Some(is_run_down) = input.action_is_down("player_run") {
-            max_velocity_opt.as_mut().map(|max_vel| {
-                if is_run_down && !player.is_run_button_down {
-                    // Start running
-                    max_vel.x = player.run_max_velocity.0;
-                    max_vel.y = player.run_max_velocity.1;
-                } else if !is_run_down && player.is_run_button_down {
-                    // Stop running
-                    max_vel.x = player.max_velocity.0;
-                    max_vel.y = player.max_velocity.1;
-                }
-            });
-            player.is_run_button_down = is_run_down;
-        }
+        let is_run_down = input_manager.is_pressed("player_run");
+        max_velocity_opt.as_mut().map(|max_vel| {
+            if is_run_down && !player.is_run_button_down {
+                // Start running
+                max_vel.x = player.run_max_velocity.0;
+                max_vel.y = player.run_max_velocity.1;
+            } else if !is_run_down && player.is_run_button_down {
+                // Stop running
+                max_vel.x = player.max_velocity.0;
+                max_vel.y = player.max_velocity.1;
+            }
+        });
+        player.is_run_button_down = is_run_down;
     }
 }
 
@@ -261,6 +259,7 @@ impl<'a> System<'a> for ControlPlayerSystem {
         ReadExpect<'a, Settings>,
         Read<'a, Time>,
         Read<'a, InputHandler<String, String>>,
+        Read<'a, InputManager>,
         ReadStorage<'a, Collision>,
         ReadStorage<'a, Solid>,
         ReadStorage<'a, JumpRecharge>,
@@ -277,7 +276,8 @@ impl<'a> System<'a> for ControlPlayerSystem {
             entities,
             settings,
             time,
-            input,
+            input_handler,
+            input_manager,
             collisions,
             solids,
             jump_recharges,
@@ -328,7 +328,7 @@ impl<'a> System<'a> for ControlPlayerSystem {
             // (constant velocity (for slow slide), wall jump, etc.)
             self.handle_wall_cling(
                 &settings,
-                &input,
+                &input_manager,
                 &mut player,
                 &mut velocity,
                 (touching_horizontally_side, touching_vertically_side),
@@ -346,7 +346,7 @@ impl<'a> System<'a> for ControlPlayerSystem {
             self.handle_move(
                 dt,
                 &settings,
-                &input,
+                &input_handler,
                 &player,
                 &mut velocity,
                 decr_velocity_opt,
@@ -355,14 +355,14 @@ impl<'a> System<'a> for ControlPlayerSystem {
             // Regular and wall jumping
             self.handle_jump(
                 &settings,
-                &input,
+                &input_manager,
                 &mut player,
                 &mut velocity,
                 &mut gravity_opt,
             );
 
             // Running
-            self.handle_run(&input, &mut player, &mut max_velocity_opt);
+            self.handle_run(&input_manager, &mut player, &mut max_velocity_opt);
         }
     }
 }

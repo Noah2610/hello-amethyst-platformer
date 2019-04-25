@@ -96,6 +96,7 @@ fn build_game_data<'a, 'b>(
     let ui_bundle = UiBundle::<String, String>::new();
     let fps_bundle = FPSCounterBundle;
     // amethyst_editor_sync bundle
+    use comps::*;
     let editor_bundle = SyncEditorBundle::default()
         // Register the default types from the engine.
         .tap(SyncEditorBundle::sync_default_types)
@@ -103,22 +104,22 @@ fn build_game_data<'a, 'b>(
         .tap(|bundle| {
             read_components!(
                 bundle,
-                comps::Camera,
-                comps::CheckCollision,
-                comps::Collision,
-                comps::DecreaseVelocity,
-                comps::Gravity,
-                comps::InnerSize,
-                comps::MaxVelocity,
-                comps::Parallax,
-                comps::Push,
-                comps::Pushable,
-                comps::ScaleOnce,
-                comps::Size,
-                comps::Solid,
-                comps::Velocity,
-                comps::JumpRecharge,
-                comps::Player,
+                Camera,
+                CheckCollision,
+                Collision,
+                DecreaseVelocity,
+                Gravity,
+                InnerSize,
+                MaxVelocity,
+                Parallax,
+                Push,
+                Pushable,
+                ScaleOnce,
+                Size,
+                Solid,
+                Velocity,
+                JumpRecharge,
+                Player,
             )
         })
         .tap(|bundle| sync_resources!(bundle, settings::Settings));
@@ -135,6 +136,9 @@ fn build_game_data<'a, 'b>(
         .with_core_bundle(ui_bundle)?
         .with_core_bundle(fps_bundle)?
         .with_core_bundle(editor_bundle)?
+        .with_core(InputManagerSystem, "input_manager_system", &[
+            "input_system",
+        ])?
         .with_core(ScaleSpritesSystem, "scale_sprites_system", &[])?
         .with_core(DebugSystem::default(), "debug_system", &[])?
         .with("ingame", ControlPlayerSystem, "control_player_system", &[])?

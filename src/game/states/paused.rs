@@ -21,6 +21,7 @@ impl<'a, 'b> State<CustomGameData<'a, 'b, DisplayConfig>, StateEvent>
             {
                 Trans::Quit
             } else if input.action_is_down("pause").unwrap_or(false) {
+                println!("UNpause");
                 // Remove paused UI
                 Trans::Pop
             } else {
