@@ -1,6 +1,7 @@
 mod ingame;
 mod paused;
-mod startup;
+// TODO: Temporary pub.
+pub mod startup;
 
 pub mod prelude {
     pub use super::Ingame;
@@ -39,7 +40,7 @@ mod state_prelude {
     pub use deathframe::custom_game_data::prelude::*;
     pub use deathframe::input_manager::InputManager;
 
-    pub use crate::game::handles::prelude::*;
+    pub use crate::game::handlers::prelude::*;
     pub use crate::resource_helpers::*;
     pub use crate::settings::prelude::*;
     pub use crate::world_helpers::*;

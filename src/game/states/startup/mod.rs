@@ -93,6 +93,55 @@ impl Startup {
                 .build(),
         );
     }
+
+    // TODO: Temporary
+    fn initialize_audio(
+        &self,
+        data: &mut StateData<CustomGameData<DisplayConfig>>,
+    ) {
+        let audio_handler = {
+            let loader = data.world.read_resource::<Loader>();
+
+            let mut sink = data.world.write_resource::<AudioSink>();
+            sink.set_volume(0.5);
+
+            let music_path = resource("audio/music/music.ogg");
+            let music = self.load_audio(&loader, &data.world, music_path);
+
+            AudioHandler {
+                music: Some(vec![music].into_iter().cycle()),
+                sfx:   Some(self.load_audio(
+                    &loader,
+                    &data.world,
+                    resource("audio/sfx/switch.ogg"),
+                )),
+            }
+        };
+
+        data.world.add_resource(audio_handler);
+    }
+
+    fn load_audio<T>(
+        &self,
+        loader: &Loader,
+        world: &World,
+        path: T,
+    ) -> SourceHandle
+    where
+        T: ToString,
+    {
+        loader.load(path.to_string(), OggFormat, (), (), &world.read_resource())
+    }
+}
+
+// TODO: Temporary
+use amethyst::audio::{AudioSink, OggFormat, Source, SourceHandle};
+use std::iter::Cycle;
+use std::vec::IntoIter;
+
+pub struct AudioHandler {
+    pub music: Option<Cycle<IntoIter<SourceHandle>>>,
+    pub sfx:   Option<SourceHandle>,
 }
 
 impl<'a, 'b> State<CustomGameData<'a, 'b, DisplayConfig>, StateEvent>
@@ -104,6 +153,10 @@ impl<'a, 'b> State<CustomGameData<'a, 'b, DisplayConfig>, StateEvent>
 
         // Loading font
         self.initialize_loading_text(&mut data);
+
+        // Audio
+        // TODO: Temporary; create resoure wraper handler in deathframe crate.
+        self.initialize_audio(&mut data);
 
         // Update manually once, so the "Loading" text is displayed
         data.data.update(&data.world, "startup").unwrap();

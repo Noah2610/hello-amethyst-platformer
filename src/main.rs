@@ -21,6 +21,7 @@ mod systems;
 
 pub use deathframe::geo;
 
+use amethyst::audio::AudioBundle;
 use amethyst::core::transform::TransformBundle;
 use amethyst::input::InputBundle;
 use amethyst::prelude::*;
@@ -95,6 +96,20 @@ fn build_game_data<'a, 'b>(
         .with_bindings_from_file(&resource("config/bindings.ron"))?;
     let ui_bundle = UiBundle::<String, String>::new();
     let fps_bundle = FPSCounterBundle;
+
+    // TODO: Temporary.
+    use amethyst::audio::SourceHandle;
+    use game::states::startup::AudioHandler;
+    use std::iter::Cycle;
+    use std::vec::IntoIter;
+    let audio_bundle = AudioBundle::new(|audio: &mut AudioHandler| {
+        if let Some(music) = &mut audio.music {
+            music.next()
+        } else {
+            None
+        }
+    });
+
     // amethyst_editor_sync bundle
     use comps::*;
     let editor_bundle = SyncEditorBundle::default()
@@ -136,6 +151,7 @@ fn build_game_data<'a, 'b>(
         .with_core_bundle(ui_bundle)?
         .with_core_bundle(fps_bundle)?
         .with_core_bundle(editor_bundle)?
+        .with_core_bundle(audio_bundle)?
         .with_core(InputManagerSystem, "input_manager_system", &[
             "input_system",
         ])?

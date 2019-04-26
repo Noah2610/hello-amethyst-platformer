@@ -194,6 +194,11 @@ impl ControlPlayerSystem {
         player: &mut Player,
         velocity: &mut Velocity,
         gravity_opt: &mut Option<&mut Gravity>,
+        (audio_handler, audio_source, audio_output): (
+            &AudioHandler,
+            &AssetStorage<Source>,
+            &Output,
+        ),
     ) {
         let is_jump_down = input_manager.is_pressed("player_jump");
         let should_jump = (player.on_ground()  // Is standing on ground
@@ -202,6 +207,14 @@ impl ControlPlayerSystem {
                     && is_jump_down  // And jump button is currently down
                     && !player.is_jump_button_down; // And jump button has not already been down
         if should_jump {
+            // TODO: TEMPORARY.
+            // Play sfx.
+            if let Some(sfx) = &audio_handler.sfx {
+                if let Some(sound) = audio_source.get(sfx) {
+                    audio_output.play_once(sound, 1.0);
+                }
+            }
+
             player.has_double_jumped = player.in_air();
             if velocity.y < 0.0 {
                 velocity.y = 0.0;
@@ -253,10 +266,17 @@ impl ControlPlayerSystem {
     }
 }
 
+// TODO: TEMPORARY.
+use crate::game::states::startup::AudioHandler;
+use amethyst::audio::{output::Output, Source};
+
 impl<'a> System<'a> for ControlPlayerSystem {
     type SystemData = (
         Entities<'a>,
         ReadExpect<'a, Settings>,
+        ReadExpect<'a, Output>,
+        ReadExpect<'a, AudioHandler>,
+        Read<'a, AssetStorage<Source>>,
         Read<'a, Time>,
         Read<'a, InputHandler<String, String>>,
         Read<'a, InputManager>,
@@ -275,6 +295,9 @@ impl<'a> System<'a> for ControlPlayerSystem {
         (
             entities,
             settings,
+            audio_output,
+            audio_handler,
+            audio_source,
             time,
             input_handler,
             input_manager,
@@ -359,6 +382,7 @@ impl<'a> System<'a> for ControlPlayerSystem {
                 &mut player,
                 &mut velocity,
                 &mut gravity_opt,
+                (&audio_handler, &audio_source, &audio_output),
             );
 
             // Running
