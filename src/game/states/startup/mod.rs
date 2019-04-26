@@ -42,8 +42,7 @@ impl Startup {
 
         spritesheet_handles.has_finished_loading_all(&data.world)
             && texture_handles.has_finished_loading_all(&data.world)
-            // TODO
-            // && audio_handles.has_finished_loading_all(&data.world)
+            && audio_handles.has_finished_loading_all(&data.world)
             && self.map_loader.is_finished()
     }
 

@@ -175,15 +175,15 @@ impl MapLoader {
             let size = Size::from(*size);
 
             let spritesheet_path = resource("textures/spritesheet_player.png");
-            let sprite_render = {
+            let (spritesheet_handle, sprite_render) = {
                 let spritesheet_handle = data
                     .world
                     .write_resource::<SpriteSheetHandles>()
                     .get_or_load(spritesheet_path, &data.world);
-                SpriteRender {
+                (spritesheet_handle.clone(), SpriteRender {
                     sprite_sheet:  spritesheet_handle,
                     sprite_number: 0,
-                }
+                })
             };
 
             let player = data
@@ -210,6 +210,13 @@ impl MapLoader {
                 .with(Collision::new())
                 .with(CheckCollision)
                 .with(Push)
+                .with(
+                    Animation::new()
+                        .default_sprite_sheet_handle(spritesheet_handle)
+                        .default_delay_ms(500)
+                        .sprite_ids(vec![0, 1])
+                        .build(),
+                )
                 .build();
             self.player_id = Some(player.id());
         }

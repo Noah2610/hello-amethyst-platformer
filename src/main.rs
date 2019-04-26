@@ -182,6 +182,7 @@ fn build_game_data<'a, 'b>(
                 "limit_velocities_system",
                 "move_entities_system",
             ],
-        )?;
+        )?
+        .with("ingame", AnimationSystem, "animation_system", &[])?;
     Ok(game_data)
 }
