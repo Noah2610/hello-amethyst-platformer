@@ -1,3 +1,5 @@
+use amethyst::audio::AudioSink;
+
 use super::state_prelude::*;
 use super::Ingame;
 use crate::components::prelude::*;
@@ -36,9 +38,12 @@ impl Startup {
         let spritesheet_handles =
             data.world.read_resource::<SpriteSheetHandles>();
         let texture_handles = data.world.read_resource::<TextureHandles>();
+        let audio_handles = data.world.read_resource::<AudioHandles>();
 
         spritesheet_handles.has_finished_loading_all(&data.world)
             && texture_handles.has_finished_loading_all(&data.world)
+            // TODO
+            // && audio_handles.has_finished_loading_all(&data.world)
             && self.map_loader.is_finished()
     }
 
@@ -94,54 +99,21 @@ impl Startup {
         );
     }
 
-    // TODO: Temporary
     fn initialize_audio(
         &self,
         data: &mut StateData<CustomGameData<DisplayConfig>>,
     ) {
-        let audio_handler = {
-            let loader = data.world.read_resource::<Loader>();
-
+        {
             let mut sink = data.world.write_resource::<AudioSink>();
             sink.set_volume(0.5);
+        }
+        let mut audio_handles = AudioHandles::default();
+        audio_handles.load(resource("audio/music/music.ogg"), &mut data.world);
+        audio_handles
+            .load(resource("audio/sfx/player_jump.ogg"), &mut data.world);
 
-            let music_path = resource("audio/music/music.ogg");
-            let music = self.load_audio(&loader, &data.world, music_path);
-
-            AudioHandler {
-                music: Some(vec![music].into_iter().cycle()),
-                sfx:   Some(self.load_audio(
-                    &loader,
-                    &data.world,
-                    resource("audio/sfx/switch.ogg"),
-                )),
-            }
-        };
-
-        data.world.add_resource(audio_handler);
+        data.world.add_resource(audio_handles);
     }
-
-    fn load_audio<T>(
-        &self,
-        loader: &Loader,
-        world: &World,
-        path: T,
-    ) -> SourceHandle
-    where
-        T: ToString,
-    {
-        loader.load(path.to_string(), OggFormat, (), (), &world.read_resource())
-    }
-}
-
-// TODO: Temporary
-use amethyst::audio::{AudioSink, OggFormat, Source, SourceHandle};
-use std::iter::Cycle;
-use std::vec::IntoIter;
-
-pub struct AudioHandler {
-    pub music: Option<Cycle<IntoIter<SourceHandle>>>,
-    pub sfx:   Option<SourceHandle>,
 }
 
 impl<'a, 'b> State<CustomGameData<'a, 'b, DisplayConfig>, StateEvent>
@@ -155,7 +127,6 @@ impl<'a, 'b> State<CustomGameData<'a, 'b, DisplayConfig>, StateEvent>
         self.initialize_loading_text(&mut data);
 
         // Audio
-        // TODO: Temporary; create resoure wraper handler in deathframe crate.
         self.initialize_audio(&mut data);
 
         // Update manually once, so the "Loading" text is displayed

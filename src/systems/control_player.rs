@@ -1,3 +1,6 @@
+use amethyst::audio::{output::Output, Source};
+use deathframe::handlers::AudioHandles;
+
 use super::system_prelude::*;
 use crate::geo::Side;
 
@@ -195,7 +198,7 @@ impl ControlPlayerSystem {
         velocity: &mut Velocity,
         gravity_opt: &mut Option<&mut Gravity>,
         (audio_handler, audio_source, audio_output): (
-            &AudioHandler,
+            &AudioHandles,
             &AssetStorage<Source>,
             &Output,
         ),
@@ -207,13 +210,12 @@ impl ControlPlayerSystem {
                     && is_jump_down  // And jump button is currently down
                     && !player.is_jump_button_down; // And jump button has not already been down
         if should_jump {
-            // TODO: TEMPORARY.
-            // Play sfx.
-            if let Some(sfx) = &audio_handler.sfx {
-                if let Some(sound) = audio_source.get(sfx) {
-                    audio_output.play_once(sound, 1.0);
-                }
-            }
+            audio_handler.play_with(
+                "player_jump",
+                audio_source,
+                audio_output,
+                None,
+            );
 
             player.has_double_jumped = player.in_air();
             if velocity.y < 0.0 {
@@ -266,16 +268,12 @@ impl ControlPlayerSystem {
     }
 }
 
-// TODO: TEMPORARY.
-use crate::game::states::startup::AudioHandler;
-use amethyst::audio::{output::Output, Source};
-
 impl<'a> System<'a> for ControlPlayerSystem {
     type SystemData = (
         Entities<'a>,
         ReadExpect<'a, Settings>,
         ReadExpect<'a, Output>,
-        ReadExpect<'a, AudioHandler>,
+        ReadExpect<'a, AudioHandles>,
         Read<'a, AssetStorage<Source>>,
         Read<'a, Time>,
         Read<'a, InputHandler<String, String>>,

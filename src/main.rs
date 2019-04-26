@@ -98,17 +98,9 @@ fn build_game_data<'a, 'b>(
     let fps_bundle = FPSCounterBundle;
 
     // TODO: Temporary.
-    use amethyst::audio::SourceHandle;
-    use game::states::startup::AudioHandler;
-    use std::iter::Cycle;
-    use std::vec::IntoIter;
-    let audio_bundle = AudioBundle::new(|audio: &mut AudioHandler| {
-        if let Some(music) = &mut audio.music {
-            music.next()
-        } else {
-            None
-        }
-    });
+    use deathframe::handlers::AudioHandles;
+    let audio_bundle =
+        AudioBundle::new(|audio: &mut AudioHandles| audio.get("music"));
 
     // amethyst_editor_sync bundle
     use comps::*;
